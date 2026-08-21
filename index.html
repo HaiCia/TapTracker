@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TapTracker</title>
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Górny Pasek -->
+      <div class="header-top">
+        <div class="header-logo">TAPTRACKER</div>
+
+        <div class="header-actions">
+          <button
+            id="view-toggle-btn"
+            onclick="toggleViewMode()"
+            class="filter-btn"
+          >
+            Full List
+          </button>
+
+          <div class="user-menu-container">
+            <button
+              class="filter-btn"
+              onclick="toggleUserMenu()"
+              id="user-display"
+            >
+              User ▼
+            </button>
+
+            <div class="user-dropdown" id="user-dropdown">
+              <div class="friend-code-section">
+                FRIEND CODE:<br />
+                <div class="friend-code-controls">
+                  <strong id="my-friend-code">⏳...</strong>
+                  <button
+                    onclick="copyFriendCode()"
+                    title="Copy code"
+                    class="filter-btn icon-btn"
+                  >
+                    📋
+                  </button>
+                  <button
+                    onclick="rotateFriendCode()"
+                    title="Reset code"
+                    class="filter-btn icon-btn"
+                  >
+                    🔄
+                  </button>
+                </div>
+              </div>
+
+              <button onclick="compareMap()" class="filter-btn dropdown-item">
+                🤝 Compare Map
+              </button>
+              <button
+                onclick="stopComparing()"
+                id="stop-compare-btn"
+                class="filter-btn dropdown-item"
+              >
+                ❌ Stop Comparing
+              </button>
+              <button
+                onclick="changeNickname()"
+                class="filter-btn dropdown-item"
+              >
+                ✏️ Nickname
+              </button>
+              <button
+                onclick="changePassword()"
+                class="filter-btn dropdown-item"
+              >
+                🔑 Password
+              </button>
+              <button
+                onclick="logout()"
+                class="filter-btn dropdown-item logout-btn"
+              >
+                🚪 Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Główny Kontener -->
+      <div class="content-area">
+        <div
+          id="sidebar-toggle-btn"
+          class="sidebar-toggle"
+          onclick="toggleSidebar()"
+        >
+          ◀
+        </div>
+
+        <div class="map-section">
+          <div id="map"></div>
+        </div>
+
+        <div class="info-panel">
+          <div class="filters-container">
+            <button class="filter-btn active" onclick="setFilter('all', this)">
+              All
+            </button>
+            <button class="filter-btn" onclick="setFilter('visited', this)">
+              Visited
+            </button>
+            <button class="filter-btn" onclick="setFilter('unvisited', this)">
+              To Visit
+            </button>
+          </div>
+
+          <div class="search-container">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="SEARCH PUBS..."
+              oninput="handleSearch(event)"
+            />
+          </div>
+
+          <div id="pub-info"></div>
+          <div id="pub-list-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

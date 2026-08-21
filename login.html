@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TapTracker - Login</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="login-body">
+    <div class="login-container">
+      <div class="login-title" id="form-title">TAPTRACKER // LOGIN</div>
+
+      <input type="email" id="email" class="login-input" placeholder="EMAIL" />
+      <input
+        type="password"
+        id="password"
+        class="login-input"
+        placeholder="PASSWORD"
+      />
+
+      <div id="error-msg"></div>
+
+      <button id="login-btn" class="login-btn" onclick="handleAuth()">
+        LOG IN
+      </button>
+
+      <button class="toggle-mode-btn" onclick="toggleMode()">
+        Need an account? Sign up
+      </button>
+    </div>
+
+    <!-- Supabase i Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+
+    <script>
+      const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+      );
+      let isSignUp = false;
+
+      async function handleAuth() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const errorDiv = document.getElementById("error-msg");
+        errorDiv.innerText = "";
+
+        if (!email || !password) {
+          errorDiv.innerText = "Fill in all fields!";
+          return;
+        }
+
+        let response;
+        if (isSignUp) {
+          response = await supabaseClient.auth.signUp({ email, password });
+        } else {
+          response = await supabaseClient.auth.signInWithPassword({
+            email,
+            password,
+          });
+        }
+
+        if (response.error) {
+          errorDiv.innerText = response.error.message;
+        } else {
+          window.location.href = "index.html";
+        }
+      }
+
+      function toggleMode() {
+        isSignUp = !isSignUp;
+        document.getElementById("form-title").innerText = isSignUp
+          ? "TAPTRACKER // REGISTER"
+          : "TAPTRACKER // LOGIN";
+        // UWAGA: Naprawiono zmianę ID przycisku! Szuka teraz login-btn.
+        document.getElementById("login-btn").innerText = isSignUp
+          ? "SIGN UP"
+          : "LOG IN";
+        document.querySelector(".toggle-mode-btn").innerText = isSignUp
+          ? "Already have an account? Log in"
+          : "Need an account? Sign up";
+      }
+
+      // Listen for Enter keypress to trigger login button click
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const loginBtn = document.getElementById("login-btn");
+          if (loginBtn) {
+            loginBtn.click();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
