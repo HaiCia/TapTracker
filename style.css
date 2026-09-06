@@ -329,7 +329,7 @@ html {
 .pub-icon-container {
   width: 45px;
   height: 45px;
-  background: #fff;
+  background: #1a1a1a;
   border: 4px solid #808080;
   border-radius: 50%;
   display: flex;
@@ -338,7 +338,7 @@ html {
   position: relative;
   font-size: 26px;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.45);
 }
 
 .pub-icon-container.is-visited {
@@ -348,19 +348,30 @@ html {
   border-color: #2196f3;
 }
 .pub-icon-container.is-both-visited {
-  border-color: #ffc107;
+  border-color: #e6680e;
 }
 
 .tick {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  background: #4caf50;
-  color: #fff;
-  font-size: 10px;
+  bottom: 3px;
+  right: 1px;
+  /* Lekkie wysunięcie poza główną ramkę wygląda bardzo dobrze przy mapach */
+  background: #1a1a1a;
+  font-size: 26px; /* Zmniejsz, żeby ikona zmieściła się w małym kółku */
   font-weight: 900;
-  padding: 2px 4px;
   border-radius: 50%;
+  color: green;
+  /* --- Nowe zasady do wyśrodkowania --- */
+  display: flex;
+  align-items: center; /* Środek w pionie */
+  justify-content: center; /* Środek w poziomie */
+  width: 36px; /* Wymiary małego kółka-znaczka */
+  height: 36px;
+}
+.tick img {
+  width: 70%; /* Ustawia wielkość obrazka względem kółka .tick */
+  height: 70%;
+  object-fit: contain;
 }
 
 /* Klastry na mapie */

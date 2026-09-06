@@ -196,10 +196,10 @@ function getMarkerHtml(isVisited, pubId, isFriendVisited = false) {
 
   if (isVisited && isFriendVisited) {
     containerClass = "is-both-visited";
-    innerHtml += '<div class="tick">🤝</div>';
+    innerHtml += '<div class="tick">🍻</div>';
   } else if (isVisited) {
     containerClass = "is-visited";
-    innerHtml += '<div class="tick">✓</div>';
+    innerHtml += '<div class="tick">✔️</div>';
   } else if (isFriendVisited) {
     containerClass = "is-friend-visited";
     innerHtml += '<div class="tick">👋</div>';
