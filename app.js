@@ -11,6 +11,10 @@ let isListOnly = false;
 let friendVisitData = {};
 let isComparing = false;
 let isAdmin = false;
+let isSuperadmin = false;
+let lastNicknameChange = null;
+let lastFriendCodeChange = null;
+let userLocationMarker = null;
 
 async function startApp() {
   const {
@@ -35,26 +39,33 @@ function toggleUserMenu() {
 async function setupUserProfile() {
   let displayName = currentUser.email.split("@")[0];
 
+  // NOWE: Pobieramy daty ostatnich zmian
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("friend_code, nickname")
+    .select(
+      "friend_code, nickname, is_admin, is_superadmin, last_nickname_change, last_friend_code_change",
+    )
     .eq("id", currentUser.id);
 
-  if (error) {
-    console.error("Profile fetch error:", error.message);
-  }
+  if (error) console.error("Profile fetch error:", error.message);
 
   if (data && data.length > 0) {
     const profile = data[0];
+    isAdmin = profile.is_admin === true;
+    isSuperadmin = profile.is_superadmin === true;
+
+    // Zapisujemy daty w pamięci
+    lastNicknameChange = profile.last_nickname_change;
+    lastFriendCodeChange = profile.last_friend_code_change;
+
     document.getElementById("my-friend-code").innerText =
       profile.friend_code || "⏳...";
-
-    if (profile.nickname) {
-      displayName = profile.nickname;
-    }
+    if (profile.nickname) displayName = profile.nickname;
   } else {
     generateNewFriendCode();
   }
+
+  // ... reszta funkcji (dodawanie koron i przycisków) zostaje bez zmian!
 
   document.getElementById("user-display").innerText = displayName + " ▼";
 }
@@ -70,12 +81,6 @@ async function generateNewFriendCode() {
   }
 }
 
-async function rotateFriendCode() {
-  if (confirm("Resetting your code will invalidate the old one. Continue?")) {
-    await generateNewFriendCode();
-  }
-}
-
 function copyFriendCode() {
   const codeText = document.getElementById("my-friend-code").innerText;
   if (!codeText || codeText.includes("⏳")) return;
@@ -85,25 +90,74 @@ function copyFriendCode() {
 }
 
 async function changeNickname() {
+  const daysLeft = getDaysRemaining(lastNicknameChange);
+
+  // Sprawdzamy limit (Superadmin może ignorować limit, jeśli chcesz, ale na razie blokujemy wszystkich)
+  if (daysLeft > 0) {
+    alert(
+      `You can only change your nickname once every 30 days. Please wait ${daysLeft} more days.`,
+    );
+    return;
+  }
+
   const currentName = document
     .getElementById("user-display")
-    .innerText.replace(" ▼", "");
+    .innerText.replace(/ ▼|👑 |🛠️ /g, "");
   const newName = window.prompt("Enter new nickname:", currentName);
 
   if (!newName || newName.trim() === "" || newName === currentName) return;
 
   const cleanName = newName.trim();
+  const nowIso = new Date().toISOString(); // Aktualna data i czas
 
   const { error } = await supabaseClient
     .from("profiles")
-    .update({ nickname: cleanName })
+    .update({
+      nickname: cleanName,
+      last_nickname_change: nowIso, // Zapisujemy datę zmiany
+    })
     .eq("id", currentUser.id);
 
   if (error) {
     alert("Error changing nickname: " + error.message);
-    console.error("Supabase error details:", error);
   } else {
-    document.getElementById("user-display").innerText = cleanName + " ▼";
+    // Aktualizujemy datę lokalnie i odświeżamy profil
+    lastNicknameChange = nowIso;
+    setupUserProfile();
+    alert("Nickname updated successfully!");
+  }
+}
+
+async function rotateFriendCode() {
+  const daysLeft = getDaysRemaining(lastFriendCodeChange);
+
+  if (daysLeft > 0) {
+    alert(
+      `You can only generate a new Friend Code once every 30 days. Please wait ${daysLeft} more days.`,
+    );
+    return;
+  }
+
+  if (confirm("Resetting your code will invalidate the old one. Continue?")) {
+    const newCode =
+      "TAP-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+    const nowIso = new Date().toISOString();
+
+    const { error } = await supabaseClient
+      .from("profiles")
+      .update({
+        friend_code: newCode,
+        last_friend_code_change: nowIso, // Zapisujemy datę zmiany
+      })
+      .eq("id", currentUser.id);
+
+    if (error) {
+      alert("Error generating new code: " + error.message);
+    } else {
+      lastFriendCodeChange = nowIso;
+      document.getElementById("my-friend-code").innerText = newCode;
+      alert("New Friend Code generated!");
+    }
   }
 }
 
@@ -140,9 +194,7 @@ async function logout() {
 
 // --- MAPA I PUBY ---
 function initMap() {
-  // Domyślny punkt startowy (jeśli ktoś zablokuje GPS, mapa zostanie tutaj)
   map = L.map("map").setView([53.8008, -1.5491], 13);
-
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
   }).addTo(map);
@@ -153,46 +205,76 @@ function initMap() {
   });
   map.addLayer(markerCluster);
 
-  // --- GEOLOKALIZACJA ---
-  // Prosimy przeglądarkę o lokalizację i automatycznie centrujemy mapę (setView: true)
+  // --- NOWE: PRZYCISK LOKALIZACJI NA MAPIE ---
+  const LocateControl = L.Control.extend({
+    options: { position: "topleft" }, // Pojawi się pod przyciskami +/-
+    onAdd: function (map) {
+      const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+      const button = L.DomUtil.create("a", "", container);
+
+      button.innerHTML = "📍";
+      button.href = "#";
+      button.title = "Find my location";
+      button.style.fontSize = "18px";
+      button.style.lineHeight = "30px";
+      button.style.textAlign = "center";
+      button.style.textDecoration = "none";
+      button.style.backgroundColor = "white";
+      button.style.display = "block";
+      button.style.width = "34px";
+      button.style.height = "34px";
+
+      // Zatrzymujemy kliknięcie, żeby nie klikało w mapę POD przyciskiem
+      L.DomEvent.disableClickPropagation(button);
+
+      // Co się dzieje po kliknięciu:
+      L.DomEvent.on(button, "click", function (e) {
+        L.DomEvent.preventDefault(e);
+        map.locate({ setView: true, maxZoom: 15 }); // Centruje mapę!
+      });
+
+      return container;
+    },
+  });
+  map.addControl(new LocateControl());
+  // --- KONIEC PRZYCISKU ---
+
+  // Pierwsze odpalenie lokalizacji przy wejściu do aplikacji
   map.locate({ setView: true, maxZoom: 15 });
 
   // Gdy telefon/komputer znajdzie pozycję:
   map.on("locationfound", function (e) {
-    L.circleMarker(e.latlng, {
-      radius: 8,
-      fillColor: "#2196f3",
-      color: "#ffffff",
-      weight: 3,
-      opacity: 1,
-      fillOpacity: 1,
-    })
-      .addTo(map)
-      .bindPopup(
-        `<div style="font-weight: bold; white-space: nowrap; color: #333;">You are here 📍</div>`,
-        {
-          closeButton: false,
-          minWidth: 10, // Minimalna szerokość na 10px, żeby dymek mógł być naprawdę mały
-          offset: [0, -5],
-          className: "mini-location-popup", // <--- TO ŁĄCZY DYMEK Z NOWYM CSS
-        },
-      )
-      .openPopup();
-  });
-  // Gdy użytkownik odmówi dostępu do GPS:
-  map.on("locationerror", function (e) {
-    console.log(
-      "Geolocation access denied or failed. Showing default map area.",
-    );
-  });
-  // Gdy użytkownik odmówi dostępu do GPS:
-  map.on("locationerror", function (e) {
-    console.log(
-      "Geolocation access denied or failed. Showing default map area.",
-    );
+    if (userLocationMarker) {
+      // Jeśli kropka już istnieje, tylko uaktualniamy jej pozycję
+      userLocationMarker.setLatLng(e.latlng);
+    } else {
+      // Jeśli kropki nie ma (pierwsze namierzenie), tworzymy ją
+      userLocationMarker = L.circleMarker(e.latlng, {
+        radius: 8,
+        fillColor: "#2196f3",
+        color: "#ffffff",
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 1,
+      })
+        .addTo(map)
+        .bindPopup(
+          `<div style="font-weight: bold; white-space: nowrap; color: #333;">You are here 📍</div>`,
+          {
+            closeButton: false,
+            minWidth: 10,
+            offset: [0, -5],
+            className: "mini-location-popup",
+          },
+        );
+    }
+    userLocationMarker.openPopup();
   });
 
-  // --- NOWE: Odświeżanie listy po każdym przesunięciu mapy ---
+  map.on("locationerror", function (e) {
+    console.log("Geolocation access denied or failed.");
+  });
+
   map.on("moveend", updateSidebarList);
 
   loadPubs();
@@ -801,6 +883,17 @@ window.revokeAdminStatus = async function () {
     }
   }
 };
+// Oblicza ile dni zostało z 30-dniowego limitu
+function getDaysRemaining(lastDateString) {
+  if (!lastDateString) return 0; // Nigdy nie zmieniano
+
+  const lastDate = new Date(lastDateString);
+  const now = new Date();
+  const diffTime = now - lastDate;
+  const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  return Math.max(0, 30 - daysPassed);
+}
 
 window.changePassword = changePassword;
 window.changeNickname = changeNickname;
