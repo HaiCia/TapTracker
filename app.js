@@ -160,10 +160,41 @@ async function loadPubs() {
     .select("*")
     .eq("user_id", currentUser.id);
 
+  // --- NOWE: Pobieramy wszystkie oceny (większe niż 0), by policzyć średnią społeczności ---
+  const { data: allRatings } = await supabaseClient
+    .from("visits")
+    .select("pub_id, rating")
+    .gt("rating", 0);
+
+  const communityData = {};
+  if (allRatings) {
+    const sums = {};
+    const counts = {};
+    allRatings.forEach((v) => {
+      if (!sums[v.pub_id]) {
+        sums[v.pub_id] = 0;
+        counts[v.pub_id] = 0;
+      }
+      sums[v.pub_id] += v.rating;
+      counts[v.pub_id]++;
+    });
+
+    Object.keys(sums).forEach((id) => {
+      communityData[id] = {
+        avg: (sums[id] / counts[id]).toFixed(1), // formatujemy do 1 miejsca po przecinku (np. 4.2)
+        count: counts[id],
+      };
+    });
+  }
+
   const visitedMap = {};
   if (visits) {
     visits.forEach((v) => {
-      visitedMap[v.pub_id] = { date: v.visit_date, note: v.note };
+      visitedMap[v.pub_id] = {
+        date: v.visit_date,
+        note: v.note,
+        rating: v.rating,
+      };
     });
   }
 
@@ -174,6 +205,10 @@ async function loadPubs() {
       pub.visited = isVisited;
       pub.visit_date = isVisited ? visitedMap[pub.id].date : null;
       pub.note = isVisited ? visitedMap[pub.id].note : null;
+      pub.rating = isVisited ? visitedMap[pub.id].rating : 0;
+
+      // --- NOWE: Przypisujemy wyliczone dane do pubu ---
+      pub.community = communityData[pub.id] || { avg: 0, count: 0 };
 
       const marker = L.marker([pub.lat, pub.lng], {
         icon: L.divIcon({
@@ -184,6 +219,14 @@ async function loadPubs() {
         }),
       });
       marker.pubData = pub;
+
+      marker.on("click", async () => {
+        if (!marker.pubData.visited) {
+          await markAsVisited(marker.pubData.id);
+          marker.openPopup();
+        }
+      });
+
       markers.push(marker);
     });
   }
@@ -204,7 +247,30 @@ function getMarkerHtml(isVisited, pubId, isFriendVisited = false) {
     containerClass = "is-friend-visited";
     innerHtml += '<div class="tick">👋</div>';
   }
-  return `<div class="pub-icon-container ${containerClass}" onclick="toggleVisitState('${pubId}')">${innerHtml}</div>`;
+
+  // Zwracamy czysty kod HTML, bez 'onclick' (kliknięcie obsługuje Leaflet)
+  return `<div class="pub-icon-container ${containerClass}">${innerHtml}</div>`;
+}
+
+// --- STAR RATING SYSTEM ---
+
+// Generates HTML for the stars inside the Leaflet popup
+function getStarsHtml(pubId, currentRating) {
+  const rating = currentRating || 0;
+  let html = '<div class="star-rating-container">';
+  html += '<div class="stars">';
+
+  // We loop backwards (5 to 1) because of the CSS row-reverse trick
+  for (let i = 5; i >= 1; i--) {
+    const isChecked = i === rating ? "checked" : "";
+
+    // FIX: Added single quotes around '${pubId}' and explicitly called window.saveRating
+    html += `<input type="radio" id="star-${i}-${pubId}" name="rating-${pubId}" value="${i}" ${isChecked} onchange="window.saveRating('${pubId}', ${i})">`;
+    html += `<label for="star-${i}-${pubId}">★</label>`;
+  }
+
+  html += "</div></div>";
+  return html;
 }
 
 function applyFilters() {
@@ -239,10 +305,42 @@ function applyFilters() {
         iconAnchor: [18, 18],
       }),
     );
+    // --- PRZYPINANIE DYMKA ZE ŚREDNIĄ ---
+    if (isVisited) {
+      const currentRating = marker.pubData.rating || 0;
+      const comm = marker.pubData.community;
+
+      // Tekst ze średnią ocen (lub informacja o jej braku)
+      const communityText =
+        comm.count > 0
+          ? `Community: <strong style="color: #ffd700;">${comm.avg} ★</strong> <span style="font-size: 9px;">(${comm.count} total)</span>`
+          : `No community ratings yet`;
+
+      const popupContent = `
+        <div style="text-align: center; min-width: 170px; padding: 5px;">
+          <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #333;">${marker.pubData.name}</h3>
+          
+          <div style="margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: bold; color: #555;">Your rating:</span><br>
+            ${getStarsHtml(pubId, currentRating)}
+          </div>
+          
+          <div style="font-size: 11px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+            ${communityText}
+          </div>
+
+          <button onclick="removeVisit('${pubId}')" style="margin-top: 12px; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%;">Remove Visit</button>
+        </div>
+      `;
+      marker.bindPopup(popupContent, { offset: [0, -15] });
+    } else {
+      marker.unbindPopup();
+    }
+    // --- KONIEC NOWEGO FRAGMENTU ---
 
     if (matchesFilter && matchesSearch) {
       markerCluster.addLayer(marker);
-      visibleCount++;
+      // ... (reszta kodu bez zmian)
 
       let noteHtml = marker.pubData.note
         ? `<div style="font-size: 10px; color: #333;">⚠️ ${marker.pubData.note}</div>`
@@ -423,6 +521,75 @@ function toggleViewMode() {
     }, 100);
   }
 }
+// Sends the selected rating to the Supabase database
+window.saveRating = async function (pubId, ratingValue) {
+  try {
+    const { data: userData, error: authError } =
+      await supabaseClient.auth.getUser();
+    if (authError || !userData?.user) {
+      console.error("User not authenticated.");
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from("visits")
+      .update({ rating: ratingValue })
+      .eq("pub_id", pubId)
+      .eq("user_id", userData.user.id);
+
+    if (error) {
+      console.error("Supabase update error:", error);
+      throw error;
+    }
+
+    console.log(`Successfully saved rating ${ratingValue} for pub ${pubId}`);
+
+    // Update local state so stars don't reset until next refresh
+    const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+    if (marker) {
+      marker.pubData.rating = ratingValue;
+    }
+  } catch (err) {
+    console.error("Error saving rating:", err.message);
+  }
+};
+
+// Błyskawiczne oznaczanie wizyty przy kliknięciu ikony na mapie
+async function markAsVisited(pubId) {
+  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker || marker.pubData.visited) return;
+
+  const today = new Date().toISOString().split("T")[0];
+  await supabaseClient
+    .from("visits")
+    .insert([
+      { user_id: currentUser.id, pub_id: pubId, visit_date: today, rating: 0 },
+    ]);
+
+  marker.pubData.visited = true;
+  marker.pubData.visit_date = today;
+  marker.pubData.rating = 0;
+  applyFilters();
+}
+
+// Usuwanie wizyty za pomocą przycisku wewnątrz dymka
+window.removeVisit = async function (pubId) {
+  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker) return;
+
+  await supabaseClient
+    .from("visits")
+    .delete()
+    .eq("user_id", currentUser.id)
+    .eq("pub_id", pubId);
+
+  marker.pubData.visited = false;
+  marker.pubData.visit_date = null;
+  marker.pubData.note = null;
+  marker.pubData.rating = 0;
+  marker.closePopup();
+  applyFilters();
+};
 
 window.changePassword = changePassword;
 window.changeNickname = changeNickname;
