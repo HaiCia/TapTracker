@@ -139,7 +139,9 @@ async function logout() {
 
 // --- MAPA I PUBY ---
 function initMap() {
+  // Domyślny punkt startowy (jeśli ktoś zablokuje GPS, mapa zostanie tutaj)
   map = L.map("map").setView([53.8008, -1.5491], 13);
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
   }).addTo(map);
@@ -149,6 +151,37 @@ function initMap() {
     disableClusteringAtZoom: 16,
   });
   map.addLayer(markerCluster);
+
+  // --- GEOLOKALIZACJA ---
+  // Prosimy przeglądarkę o lokalizację i automatycznie centrujemy mapę (setView: true)
+  map.locate({ setView: true, maxZoom: 15 });
+
+  // Gdy telefon/komputer znajdzie pozycję:
+  map.on("locationfound", function (e) {
+    // Dodajemy niebieską kropkę oznaczającą użytkownika
+    L.circleMarker(e.latlng, {
+      radius: 8,
+      fillColor: "#2196f3", // Niebieski kolor
+      color: "#ffffff", // Biała, gruba ramka dla kontrastu
+      weight: 3,
+      opacity: 1,
+      fillOpacity: 1,
+      boxShadow: "0 3px 14px rgba(0,0,0,0.4)",
+    })
+      .addTo(map)
+      .bindPopup(
+        `<div style="text-align:center; font-weight:bold;">You are here! 📍</div>`,
+      )
+      .openPopup();
+  });
+
+  // Gdy użytkownik odmówi dostępu do GPS:
+  map.on("locationerror", function (e) {
+    console.log(
+      "Geolocation access denied or failed. Showing default map area.",
+    );
+  });
+  // --- KONIEC GEOLOKALIZACJI ---
 
   loadPubs();
 }
@@ -305,12 +338,12 @@ function applyFilters() {
         iconAnchor: [18, 18],
       }),
     );
-    // --- PRZYPINANIE DYMKA ZE ŚREDNIĄ ---
+    // --- PRZYPINANIE DYMKA Z OCENĄ I DATĄ ---
     if (isVisited) {
       const currentRating = marker.pubData.rating || 0;
       const comm = marker.pubData.community;
+      const visitDate = marker.pubData.visit_date || "Unknown date";
 
-      // Tekst ze średnią ocen (lub informacja o jej braku)
       const communityText =
         comm.count > 0
           ? `Community: <strong style="color: #ffd700;">${comm.avg} ★</strong> <span style="font-size: 9px;">(${comm.count} total)</span>`
@@ -319,6 +352,12 @@ function applyFilters() {
       const popupContent = `
         <div style="text-align: center; min-width: 170px; padding: 5px;">
           <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #333;">${marker.pubData.name}</h3>
+          
+          <!-- NOWE: Data odwiedzin z przyciskiem edycji -->
+          <div style="margin-bottom: 12px; font-size: 12px; color: #555; background: #f4f4f4; padding: 4px; border-radius: 4px; display: inline-block;">
+            Visited: <strong>${visitDate}</strong>
+            <button onclick="window.editVisitDate('${pubId}')" style="background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; margin-left: 4px;" title="Edit date">✏️</button>
+          </div>
           
           <div style="margin-bottom: 8px;">
             <span style="font-size: 11px; font-weight: bold; color: #555;">Your rating:</span><br>
@@ -329,57 +368,48 @@ function applyFilters() {
             ${communityText}
           </div>
 
-          <button onclick="removeVisit('${pubId}')" style="margin-top: 12px; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%;">Remove Visit</button>
+          <button onclick="window.removeVisit('${pubId}')" style="margin-top: 12px; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%;">Remove Visit</button>
         </div>
       `;
       marker.bindPopup(popupContent, { offset: [0, -15] });
     } else {
       marker.unbindPopup();
     }
-    // --- KONIEC NOWEGO FRAGMENTU ---
 
     if (matchesFilter && matchesSearch) {
       markerCluster.addLayer(marker);
-      // ... (reszta kodu bez zmian)
+      visibleCount++;
 
       let noteHtml = marker.pubData.note
         ? `<div style="font-size: 10px; color: #333;">⚠️ ${marker.pubData.note}</div>`
         : "";
-      let dateHtml =
-        isVisited && marker.pubData.visit_date
-          ? `
-                <div style="font-size: 10px; color: #555;">
-                    <span onclick="event.stopPropagation(); editVisitDate('${pubId}')" style="cursor:pointer; font-weight: bold;" title="Edit date">✏️ ${marker.pubData.visit_date}</span>
-                </div>`
-          : "";
 
-      // UWAGA: Upewnij się, że ADMIN_EMAILS jest zdefiniowane w config.js!
       let adminButtons =
         typeof ADMIN_EMAILS !== "undefined" &&
         ADMIN_EMAILS.includes(currentUser.email)
           ? `<button onclick="event.stopPropagation(); editNote('${pubId}')" style="background:none; border:none; cursor:pointer; font-size:10px;">✏️ note</button>`
           : "";
 
+      // Z listy bocznej zniknął dateHtml!
       listHtml += `
-                <div class="pub-list-item" onclick="flyToPub(${marker.pubData.lat}, ${marker.pubData.lng})">
-                    <div class="pub-info-group">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <span class="pub-name">${marker.pubData.name}</span>
-                            ${adminButtons}
-                        </div>
-                        ${dateHtml}
-                        ${noteHtml}
-                    </div>
-                    <div class="pub-list-bottom">
-                        <span style="font-size: 8px; font-weight: 900; color: #666; text-transform: uppercase;">
-                            ${isVisited ? "VISITED" : "TO VISIT"}
-                        </span>
-                        <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); toggleVisitState('${pubId}')">
-                            ${isVisited ? "✓ VISITED" : "+ MARK"}
-                        </button>
-                    </div>
+        <div class="pub-list-item" onclick="flyToPub(${marker.pubData.lat}, ${marker.pubData.lng})">
+            <div class="pub-info-group">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <span class="pub-name">${marker.pubData.name}</span>
+                    ${adminButtons}
                 </div>
-            `;
+                ${noteHtml}
+            </div>
+            <div class="pub-list-bottom">
+                <span style="font-size: 8px; font-weight: 900; color: #666; text-transform: uppercase;">
+                    ${isVisited ? "VISITED" : "TO VISIT"}
+                </span>
+                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); toggleVisitState('${pubId}')">
+                    ${isVisited ? "✓ VISITED" : "+ MARK"}
+                </button>
+            </div>
+        </div>
+      `;
     }
   });
 
@@ -429,19 +459,30 @@ async function toggleVisitState(pubId) {
   applyFilters();
 }
 
-async function editVisitDate(pubId) {
-  const newDate = prompt(
-    "Enter visit date (YYYY-MM-DD):",
-    new Date().toISOString().split("T")[0],
-  );
-  if (!newDate) return;
+window.editVisitDate = async function (pubId) {
+  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker) return;
+
+  const currentDate =
+    marker.pubData.visit_date || new Date().toISOString().split("T")[0];
+  const newDate = prompt("Enter visit date (YYYY-MM-DD):", currentDate);
+
+  if (!newDate || newDate.trim() === currentDate) return;
+
+  // Zapis do bazy
   await supabaseClient
     .from("visits")
     .update({ visit_date: newDate })
     .eq("user_id", currentUser.id)
     .eq("pub_id", pubId);
-  loadPubs();
-}
+
+  // Aktualizacja stanu i przeładowanie widoku
+  marker.pubData.visit_date = newDate;
+  applyFilters();
+
+  // Ponownie otwieramy dymek, żeby użytkownik od razu zobaczył nową datę
+  marker.openPopup();
+};
 
 // --- PORÓWNYWANIE MAP ---
 async function compareMap() {
