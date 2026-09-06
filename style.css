@@ -462,3 +462,14 @@ html {
   text-align: center;
   min-height: 14px;
 }
+/* --- GEOLOKALIZACJA - MINI DYMEK --- */
+.mini-location-popup .leaflet-popup-content-wrapper {
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.mini-location-popup .leaflet-popup-content {
+  margin: 6px 10px; /* To jest klucz! Nadpisujemy domyślne, wielkie marginesy Leafleta */
+  font-size: 12px;
+  line-height: 1;
+}

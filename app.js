@@ -10,6 +10,7 @@ let isSidebarHidden = false;
 let isListOnly = false;
 let friendVisitData = {};
 let isComparing = false;
+let isAdmin = false;
 
 async function startApp() {
   const {
@@ -158,30 +159,41 @@ function initMap() {
 
   // Gdy telefon/komputer znajdzie pozycję:
   map.on("locationfound", function (e) {
-    // Dodajemy niebieską kropkę oznaczającą użytkownika
     L.circleMarker(e.latlng, {
       radius: 8,
-      fillColor: "#2196f3", // Niebieski kolor
-      color: "#ffffff", // Biała, gruba ramka dla kontrastu
+      fillColor: "#2196f3",
+      color: "#ffffff",
       weight: 3,
       opacity: 1,
       fillOpacity: 1,
-      boxShadow: "0 3px 14px rgba(0,0,0,0.4)",
     })
       .addTo(map)
       .bindPopup(
-        `<div style="text-align:center; font-weight:bold;">You are here! 📍</div>`,
+        `<div style="font-weight: bold; white-space: nowrap; color: #333;">You are here 📍</div>`,
+        {
+          closeButton: false,
+          minWidth: 10, // Minimalna szerokość na 10px, żeby dymek mógł być naprawdę mały
+          offset: [0, -5],
+          className: "mini-location-popup", // <--- TO ŁĄCZY DYMEK Z NOWYM CSS
+        },
       )
       .openPopup();
   });
-
   // Gdy użytkownik odmówi dostępu do GPS:
   map.on("locationerror", function (e) {
     console.log(
       "Geolocation access denied or failed. Showing default map area.",
     );
   });
-  // --- KONIEC GEOLOKALIZACJI ---
+  // Gdy użytkownik odmówi dostępu do GPS:
+  map.on("locationerror", function (e) {
+    console.log(
+      "Geolocation access denied or failed. Showing default map area.",
+    );
+  });
+
+  // --- NOWE: Odświeżanie listy po każdym przesunięciu mapy ---
+  map.on("moveend", updateSidebarList);
 
   loadPubs();
 }
@@ -307,8 +319,6 @@ function getStarsHtml(pubId, currentRating) {
 }
 
 function applyFilters() {
-  let visibleCount = 0;
-  let listHtml = "";
   markerCluster.clearLayers();
 
   markers.forEach((marker) => {
@@ -329,6 +339,9 @@ function applyFilters() {
       .toLowerCase()
       .includes(currentSearchQuery);
 
+    // Zapisujemy w pamięci markera, czy spełnia filtry wpisane z palca
+    marker.matchesFilters = matchesFilter && matchesSearch;
+
     const updatedHtml = getMarkerHtml(isVisited, pubId, isFriendVisited);
     marker.setIcon(
       L.divIcon({
@@ -338,6 +351,7 @@ function applyFilters() {
         iconAnchor: [18, 18],
       }),
     );
+
     // --- PRZYPINANIE DYMKA Z OCENĄ I DATĄ ---
     if (isVisited) {
       const currentRating = marker.pubData.rating || 0;
@@ -353,7 +367,6 @@ function applyFilters() {
         <div style="text-align: center; min-width: 170px; padding: 5px;">
           <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #333;">${marker.pubData.name}</h3>
           
-          <!-- NOWE: Data odwiedzin z przyciskiem edycji -->
           <div style="margin-bottom: 12px; font-size: 12px; color: #555; background: #f4f4f4; padding: 4px; border-radius: 4px; display: inline-block;">
             Visited: <strong>${visitDate}</strong>
             <button onclick="window.editVisitDate('${pubId}')" style="background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; margin-left: 4px;" title="Edit date">✏️</button>
@@ -376,21 +389,39 @@ function applyFilters() {
       marker.unbindPopup();
     }
 
-    if (matchesFilter && matchesSearch) {
+    if (marker.matchesFilters) {
       markerCluster.addLayer(marker);
+    }
+  });
+
+  // Odświeżamy pasek boczny
+  updateSidebarList();
+}
+function updateSidebarList() {
+  let visibleCount = 0;
+  let listHtml = "";
+
+  // Pobieramy obecne granice ekranu
+  const currentBounds = map.getBounds();
+
+  markers.forEach((marker) => {
+    // Sprawdzamy czy pub pasuje do zakładek (np. "To Visit") ORAZ czy fizycznie widać go na mapie
+    if (marker.matchesFilters && currentBounds.contains(marker.getLatLng())) {
       visibleCount++;
+
+      const pubId = marker.pubData.id;
+      const isVisited = marker.pubData.visited;
 
       let noteHtml = marker.pubData.note
         ? `<div style="font-size: 10px; color: #333;">⚠️ ${marker.pubData.note}</div>`
         : "";
 
+      // Widoczne dla Admina LUB Superadmina
       let adminButtons =
-        typeof ADMIN_EMAILS !== "undefined" &&
-        ADMIN_EMAILS.includes(currentUser.email)
-          ? `<button onclick="event.stopPropagation(); editNote('${pubId}')" style="background:none; border:none; cursor:pointer; font-size:10px;">✏️ note</button>`
+        isAdmin || isSuperadmin
+          ? `<button onclick="event.stopPropagation(); window.editNote('${pubId}')" style="background:none; border:none; cursor:pointer; font-size:10px;">✏️ note</button>`
           : "";
 
-      // Z listy bocznej zniknął dateHtml!
       listHtml += `
         <div class="pub-list-item" onclick="flyToPub(${marker.pubData.lat}, ${marker.pubData.lng})">
             <div class="pub-info-group">
@@ -413,7 +444,7 @@ function applyFilters() {
     }
   });
 
-  document.getElementById("pub-info").innerText = `MATCHING: ${visibleCount}`;
+  document.getElementById("pub-info").innerText = `VISIBLE: ${visibleCount}`;
   document.getElementById("pub-list-container").innerHTML = listHtml;
 }
 
@@ -630,6 +661,145 @@ window.removeVisit = async function (pubId) {
   marker.pubData.rating = 0;
   marker.closePopup();
   applyFilters();
+};
+async function setupUserProfile() {
+  let displayName = currentUser.email.split("@")[0];
+
+  // Pobieramy oba statusy z bazy
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("friend_code, nickname, is_admin, is_superadmin")
+    .eq("id", currentUser.id);
+
+  if (error) console.error("Profile fetch error:", error.message);
+
+  if (data && data.length > 0) {
+    const profile = data[0];
+    isAdmin = profile.is_admin === true;
+    isSuperadmin = profile.is_superadmin === true; // Zapisujemy status boski
+
+    document.getElementById("my-friend-code").innerText =
+      profile.friend_code || "⏳...";
+    if (profile.nickname) displayName = profile.nickname;
+  } else {
+    generateNewFriendCode();
+  }
+
+  // Odpowiednia ikonka w zależności od rangi
+  let displayHtml = `${displayName} ▼`;
+  if (isSuperadmin) displayHtml = `👑 ${displayName} ▼`;
+  else if (isAdmin) displayHtml = `🛠️ ${displayName} ▼`;
+
+  document.getElementById("user-display").innerText = displayHtml;
+
+  // Przycisk nadawania i odbierania uprawnień dodawany TYLKO dla Superadmina
+  if (isSuperadmin) {
+    let dropdown = document.getElementById("user-dropdown");
+    if (dropdown && !document.getElementById("btn-make-admin")) {
+      // 1. Przycisk awansowania
+      const grantBtn = document.createElement("button");
+      grantBtn.id = "btn-make-admin";
+      grantBtn.innerHTML = "👑 Grant Admin";
+      grantBtn.style.color = "#f39c12"; // Złoty
+      grantBtn.onclick = window.grantAdminStatus;
+      dropdown.insertBefore(grantBtn, dropdown.firstChild);
+
+      // 2. Przycisk degradowania (NOWY)
+      const revokeBtn = document.createElement("button");
+      revokeBtn.id = "btn-revoke-admin";
+      revokeBtn.innerHTML = "❌ Revoke Admin";
+      revokeBtn.style.color = "#e74c3c"; // Czerwony
+      revokeBtn.onclick = window.revokeAdminStatus;
+      dropdown.insertBefore(revokeBtn, grantBtn.nextSibling);
+    }
+  }
+}
+
+window.grantAdminStatus = async function () {
+  if (!isSuperadmin) {
+    alert("Only a Superadmin can grant permissions.");
+    return;
+  }
+
+  const code = window.prompt(
+    "Enter the Friend Code to promote to Admin (e.g. TAP-A1B2):",
+  );
+  if (!code || !code.trim()) return;
+
+  const cleanCode = code.trim().toUpperCase();
+
+  const { data: profiles, error: searchError } = await supabaseClient
+    .from("profiles")
+    .select("id, nickname")
+    .eq("friend_code", cleanCode);
+
+  if (searchError || !profiles || profiles.length === 0) {
+    alert("User not found! Make sure the Friend Code is correct.");
+    return;
+  }
+
+  const targetUserId = profiles[0].id;
+  const targetName = profiles[0].nickname || cleanCode;
+
+  if (
+    confirm(`Are you sure you want to make ${targetName} a Moderator (Admin)?`)
+  ) {
+    const { error: updateError } = await supabaseClient
+      .from("profiles")
+      .update({ is_admin: true })
+      .eq("id", targetUserId);
+
+    if (updateError) {
+      alert("Error updating database. Check permissions.");
+      console.error(updateError);
+    } else {
+      alert(`Success! ${targetName} is now an Admin 🛠️.`);
+    }
+  }
+};
+window.revokeAdminStatus = async function () {
+  if (!isSuperadmin) {
+    alert("Only a Superadmin can revoke permissions.");
+    return;
+  }
+
+  const code = window.prompt(
+    "Enter the Friend Code to REMOVE Admin rights from (e.g. TAP-A1B2):",
+  );
+  if (!code || !code.trim()) return;
+
+  const cleanCode = code.trim().toUpperCase();
+
+  const { data: profiles, error: searchError } = await supabaseClient
+    .from("profiles")
+    .select("id, nickname")
+    .eq("friend_code", cleanCode);
+
+  if (searchError || !profiles || profiles.length === 0) {
+    alert("User not found! Make sure the Friend Code is correct.");
+    return;
+  }
+
+  const targetUserId = profiles[0].id;
+  const targetName = profiles[0].nickname || cleanCode;
+
+  if (
+    confirm(
+      `Are you absolutely sure you want to REVOKE Admin rights from ${targetName}?`,
+    )
+  ) {
+    const { error: updateError } = await supabaseClient
+      .from("profiles")
+      .update({ is_admin: false })
+      .eq("id", targetUserId);
+
+    if (updateError) {
+      alert("Error updating database. Check permissions.");
+      console.error(updateError);
+    } else {
+      alert(`Success! ${targetName} is no longer an Admin.`);
+    }
+  }
 };
 
 window.changePassword = changePassword;
