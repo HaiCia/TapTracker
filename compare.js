@@ -1,6 +1,8 @@
 const { createClient } = require("@supabase/supabase-js");
-const { supabaseUrl, supabaseSecretKey } = require("./admin-keys.js");
+require("dotenv").config();
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
 const supabase = createClient(supabaseUrl, supabaseSecretKey);
 
 // 2. Stabilny, główny serwer OpenStreetMap
