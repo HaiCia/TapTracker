@@ -353,11 +353,11 @@ html {
 
 .tick {
   position: absolute;
-  bottom: 3px;
+  bottom: 1px;
   right: 1px;
   /* Lekkie wysunięcie poza główną ramkę wygląda bardzo dobrze przy mapach */
   background: #1a1a1a;
-  font-size: 26px; /* Zmniejsz, żeby ikona zmieściła się w małym kółku */
+  font-size: 25px; /* Zmniejsz, żeby ikona zmieściła się w małym kółku */
   font-weight: 900;
   border-radius: 50%;
   color: green;
@@ -472,4 +472,9 @@ html {
   margin: 6px 10px; /* To jest klucz! Nadpisujemy domyślne, wielkie marginesy Leafleta */
   font-size: 12px;
   line-height: 1;
+}
+/* Podświetlenie aktywnego pubu na liście */
+.pub-list-item.active-sidebar-item {
+  background-color: #e8f4fd; /* Jasnoniebieskie tło */
+  border-left: 4px solid #2196f3; /* Niebieski pasek z boku */
 }

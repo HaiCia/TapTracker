@@ -35,11 +35,10 @@ function toggleUserMenu() {
   if (dropdown) dropdown.classList.toggle("show");
 }
 
-// --- PROFIL UŻYTKOWNIKA I KODY ZNAJOMYCH ---
+// --- PROFIL UŻYTKOWNIKA I KODY ZNAJOMYCH (Połączona i naprawiona wersja) ---
 async function setupUserProfile() {
   let displayName = currentUser.email.split("@")[0];
 
-  // NOWE: Pobieramy daty ostatnich zmian
   const { data, error } = await supabaseClient
     .from("profiles")
     .select(
@@ -65,9 +64,34 @@ async function setupUserProfile() {
     generateNewFriendCode();
   }
 
-  // ... reszta funkcji (dodawanie koron i przycisków) zostaje bez zmian!
+  // Odpowiednia ikonka w zależności od rangi
+  let displayHtml = `${displayName} ▼`;
+  if (isSuperadmin) displayHtml = `👑 ${displayName} ▼`;
+  else if (isAdmin) displayHtml = `🛠️ ${displayName} ▼`;
 
-  document.getElementById("user-display").innerText = displayName + " ▼";
+  document.getElementById("user-display").innerText = displayHtml;
+
+  // Przycisk nadawania i odbierania uprawnień dodawany TYLKO dla Superadmina
+  if (isSuperadmin) {
+    let dropdown = document.getElementById("user-dropdown");
+    if (dropdown && !document.getElementById("btn-make-admin")) {
+      // 1. Przycisk awansowania
+      const grantBtn = document.createElement("button");
+      grantBtn.id = "btn-make-admin";
+      grantBtn.innerHTML = "👑 Grant Admin";
+      grantBtn.style.color = "#f39c12"; // Złoty
+      grantBtn.onclick = window.grantAdminStatus;
+      dropdown.insertBefore(grantBtn, dropdown.firstChild);
+
+      // 2. Przycisk degradowania
+      const revokeBtn = document.createElement("button");
+      revokeBtn.id = "btn-revoke-admin";
+      revokeBtn.innerHTML = "❌ Revoke Admin";
+      revokeBtn.style.color = "#e74c3c"; // Czerwony
+      revokeBtn.onclick = window.revokeAdminStatus;
+      dropdown.insertBefore(revokeBtn, grantBtn.nextSibling);
+    }
+  }
 }
 
 async function generateNewFriendCode() {
@@ -89,10 +113,21 @@ function copyFriendCode() {
     .then(() => alert("Copied: " + codeText));
 }
 
+// Oblicza ile dni zostało z 30-dniowego limitu
+function getDaysRemaining(lastDateString) {
+  if (!lastDateString) return 0; // Nigdy nie zmieniano
+
+  const lastDate = new Date(lastDateString);
+  const now = new Date();
+  const diffTime = now - lastDate;
+  const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  return Math.max(0, 30 - daysPassed);
+}
+
 async function changeNickname() {
   const daysLeft = getDaysRemaining(lastNicknameChange);
 
-  // Sprawdzamy limit (Superadmin może ignorować limit, jeśli chcesz, ale na razie blokujemy wszystkich)
   if (daysLeft > 0) {
     alert(
       `You can only change your nickname once every 30 days. Please wait ${daysLeft} more days.`,
@@ -108,20 +143,19 @@ async function changeNickname() {
   if (!newName || newName.trim() === "" || newName === currentName) return;
 
   const cleanName = newName.trim();
-  const nowIso = new Date().toISOString(); // Aktualna data i czas
+  const nowIso = new Date().toISOString();
 
   const { error } = await supabaseClient
     .from("profiles")
     .update({
       nickname: cleanName,
-      last_nickname_change: nowIso, // Zapisujemy datę zmiany
+      last_nickname_change: nowIso,
     })
     .eq("id", currentUser.id);
 
   if (error) {
     alert("Error changing nickname: " + error.message);
   } else {
-    // Aktualizujemy datę lokalnie i odświeżamy profil
     lastNicknameChange = nowIso;
     setupUserProfile();
     alert("Nickname updated successfully!");
@@ -147,7 +181,7 @@ async function rotateFriendCode() {
       .from("profiles")
       .update({
         friend_code: newCode,
-        last_friend_code_change: nowIso, // Zapisujemy datę zmiany
+        last_friend_code_change: nowIso,
       })
       .eq("id", currentUser.id);
 
@@ -207,7 +241,7 @@ function initMap() {
 
   // --- NOWE: PRZYCISK LOKALIZACJI NA MAPIE ---
   const LocateControl = L.Control.extend({
-    options: { position: "topleft" }, // Pojawi się pod przyciskami +/-
+    options: { position: "topleft" },
     onAdd: function (map) {
       const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
       const button = L.DomUtil.create("a", "", container);
@@ -224,31 +258,24 @@ function initMap() {
       button.style.width = "34px";
       button.style.height = "34px";
 
-      // Zatrzymujemy kliknięcie, żeby nie klikało w mapę POD przyciskiem
       L.DomEvent.disableClickPropagation(button);
 
-      // Co się dzieje po kliknięciu:
       L.DomEvent.on(button, "click", function (e) {
         L.DomEvent.preventDefault(e);
-        map.locate({ setView: true, maxZoom: 15 }); // Centruje mapę!
+        map.locate({ setView: true, maxZoom: 15 });
       });
 
       return container;
     },
   });
   map.addControl(new LocateControl());
-  // --- KONIEC PRZYCISKU ---
 
-  // Pierwsze odpalenie lokalizacji przy wejściu do aplikacji
   map.locate({ setView: true, maxZoom: 15 });
 
-  // Gdy telefon/komputer znajdzie pozycję:
   map.on("locationfound", function (e) {
     if (userLocationMarker) {
-      // Jeśli kropka już istnieje, tylko uaktualniamy jej pozycję
       userLocationMarker.setLatLng(e.latlng);
     } else {
-      // Jeśli kropki nie ma (pierwsze namierzenie), tworzymy ją
       userLocationMarker = L.circleMarker(e.latlng, {
         radius: 8,
         fillColor: "#2196f3",
@@ -287,29 +314,38 @@ async function loadPubs() {
     .select("*")
     .eq("user_id", currentUser.id);
 
-  // --- NOWE: Pobieramy wszystkie oceny (większe niż 0), by policzyć średnią społeczności ---
-  const { data: allRatings } = await supabaseClient
+  const { data: allCommunityData } = await supabaseClient
     .from("visits")
-    .select("pub_id, rating")
-    .gt("rating", 0);
+    .select("pub_id, rating, review");
 
   const communityData = {};
-  if (allRatings) {
+  if (allCommunityData) {
     const sums = {};
     const counts = {};
-    allRatings.forEach((v) => {
+    const reviewsCounts = {};
+
+    allCommunityData.forEach((v) => {
       if (!sums[v.pub_id]) {
         sums[v.pub_id] = 0;
         counts[v.pub_id] = 0;
+        reviewsCounts[v.pub_id] = 0;
       }
-      sums[v.pub_id] += v.rating;
-      counts[v.pub_id]++;
+
+      if (v.rating > 0) {
+        sums[v.pub_id] += v.rating;
+        counts[v.pub_id]++;
+      }
+
+      if (v.review && v.review.trim().length > 0) {
+        reviewsCounts[v.pub_id]++;
+      }
     });
 
     Object.keys(sums).forEach((id) => {
       communityData[id] = {
-        avg: (sums[id] / counts[id]).toFixed(1), // formatujemy do 1 miejsca po przecinku (np. 4.2)
+        avg: counts[id] > 0 ? (sums[id] / counts[id]).toFixed(1) : 0,
         count: counts[id],
+        reviewsCount: reviewsCounts[id],
       };
     });
   }
@@ -317,10 +353,17 @@ async function loadPubs() {
   const visitedMap = {};
   if (visits) {
     visits.forEach((v) => {
+      let history = v.visit_history;
+      if (!history || history.length === 0) {
+        history = v.visit_date ? [v.visit_date] : [];
+      }
       visitedMap[v.pub_id] = {
         date: v.visit_date,
-        note: v.note,
+        note: v.note || "",
+        review: v.review || "",
         rating: v.rating,
+        is_favorite: v.is_favorite === true,
+        visit_history: history,
       };
     });
   }
@@ -331,11 +374,16 @@ async function loadPubs() {
       const isVisited = !!visitedMap[pub.id];
       pub.visited = isVisited;
       pub.visit_date = isVisited ? visitedMap[pub.id].date : null;
-      pub.note = isVisited ? visitedMap[pub.id].note : null;
+      pub.note = isVisited ? visitedMap[pub.id].note : "";
+      pub.review = isVisited ? visitedMap[pub.id].review : "";
       pub.rating = isVisited ? visitedMap[pub.id].rating : 0;
-
-      // --- NOWE: Przypisujemy wyliczone dane do pubu ---
-      pub.community = communityData[pub.id] || { avg: 0, count: 0 };
+      pub.is_favorite = isVisited ? visitedMap[pub.id].is_favorite : false;
+      pub.visit_history = isVisited ? visitedMap[pub.id].visit_history : [];
+      pub.community = communityData[pub.id] || {
+        avg: 0,
+        count: 0,
+        reviewsCount: 0,
+      };
 
       const marker = L.marker([pub.lat, pub.lng], {
         icon: L.divIcon({
@@ -346,13 +394,6 @@ async function loadPubs() {
         }),
       });
       marker.pubData = pub;
-
-      marker.on("click", async () => {
-        if (!marker.pubData.visited) {
-          await markAsVisited(marker.pubData.id);
-          marker.openPopup();
-        }
-      });
 
       markers.push(marker);
     });
@@ -375,25 +416,20 @@ function getMarkerHtml(isVisited, pubId, isFriendVisited = false) {
     innerHtml += '<div class="tick">👋</div>';
   }
 
-  // Zwracamy czysty kod HTML, bez 'onclick' (kliknięcie obsługuje Leaflet)
   return `<div class="pub-icon-container ${containerClass}">${innerHtml}</div>`;
 }
-
-// --- STAR RATING SYSTEM ---
 
 // Generates HTML for the stars inside the Leaflet popup
 function getStarsHtml(pubId, currentRating) {
   const rating = currentRating || 0;
   let html = '<div class="star-rating-container">';
-  html += '<div class="stars">';
+  html +=
+    '<div class="stars" style="display: flex; flex-direction: row; justify-content: center;">';
 
-  // We loop backwards (5 to 1) because of the CSS row-reverse trick
-  for (let i = 5; i >= 1; i--) {
+  for (let i = 1; i <= 5; i++) {
     const isChecked = i === rating ? "checked" : "";
-
-    // FIX: Added single quotes around '${pubId}' and explicitly called window.saveRating
     html += `<input type="radio" id="star-${i}-${pubId}" name="rating-${pubId}" value="${i}" ${isChecked} onchange="window.saveRating('${pubId}', ${i})">`;
-    html += `<label for="star-${i}-${pubId}">★</label>`;
+    html += `<label for="star-${i}-${pubId}" style="cursor:pointer; padding: 0 2px;">★</label>`;
   }
 
   html += "</div></div>";
@@ -420,8 +456,6 @@ function applyFilters() {
     const matchesSearch = marker.pubData.name
       .toLowerCase()
       .includes(currentSearchQuery);
-
-    // Zapisujemy w pamięci markera, czy spełnia filtry wpisane z palca
     marker.matchesFilters = matchesFilter && matchesSearch;
 
     const updatedHtml = getMarkerHtml(isVisited, pubId, isFriendVisited);
@@ -434,90 +468,89 @@ function applyFilters() {
       }),
     );
 
-    // --- PRZYPINANIE DYMKA Z OCENĄ I DATĄ ---
-    if (isVisited) {
-      const currentRating = marker.pubData.rating || 0;
-      const comm = marker.pubData.community;
-      const visitDate = marker.pubData.visit_date || "Unknown date";
+    // Zostawiamy tylko etykietkę po najechaniu myszką
+    marker.bindTooltip(
+      `<div style="font-size:12px; font-weight:bold;">${marker.pubData.name}</div>`,
+      { direction: "top", offset: [0, -15], opacity: 0.95 },
+    );
 
-      const communityText =
-        comm.count > 0
-          ? `Community: <strong style="color: #ffd700;">${comm.avg} ★</strong> <span style="font-size: 9px;">(${comm.count} total)</span>`
-          : `No community ratings yet`;
+    // CAŁKOWICIE USUWAMY STARE DYMKI (okienka)
+    marker.unbindPopup();
+    marker.off("click");
 
-      const popupContent = `
-        <div style="text-align: center; min-width: 170px; padding: 5px;">
-          <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #333;">${marker.pubData.name}</h3>
-          
-          <div style="margin-bottom: 12px; font-size: 12px; color: #555; background: #f4f4f4; padding: 4px; border-radius: 4px; display: inline-block;">
-            Visited: <strong>${visitDate}</strong>
-            <button onclick="window.editVisitDate('${pubId}')" style="background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 2px; margin-left: 4px;" title="Edit date">✏️</button>
-          </div>
-          
-          <div style="margin-bottom: 8px;">
-            <span style="font-size: 11px; font-weight: bold; color: #555;">Your rating:</span><br>
-            ${getStarsHtml(pubId, currentRating)}
-          </div>
-          
-          <div style="font-size: 11px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-            ${communityText}
-          </div>
-
-          <button onclick="window.removeVisit('${pubId}')" style="margin-top: 12px; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%;">Remove Visit</button>
-        </div>
-      `;
-      marker.bindPopup(popupContent, { offset: [0, -15] });
-    } else {
-      marker.unbindPopup();
-    }
+    // Kliknięcie zawsze otwiera tylko i wyłącznie Modal
+    marker.on("click", () => {
+      window.highlightSidebar(pubId);
+      window.openPubDetails(pubId);
+    });
 
     if (marker.matchesFilters) {
       markerCluster.addLayer(marker);
     }
   });
 
-  // Odświeżamy pasek boczny
   updateSidebarList();
 }
+window.highlightSidebar = function (pubId) {
+  document
+    .querySelectorAll(".pub-list-item")
+    .forEach((el) => el.classList.remove("active-sidebar-item"));
+
+  const activeItem = document.getElementById(`sidebar-item-${pubId}`);
+  if (activeItem) {
+    activeItem.classList.add("active-sidebar-item");
+    activeItem.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+};
+
 function updateSidebarList() {
   let visibleCount = 0;
   let listHtml = "";
 
-  // Pobieramy obecne granice ekranu
   const currentBounds = map.getBounds();
 
   markers.forEach((marker) => {
-    // Sprawdzamy czy pub pasuje do zakładek (np. "To Visit") ORAZ czy fizycznie widać go na mapie
     if (marker.matchesFilters && currentBounds.contains(marker.getLatLng())) {
       visibleCount++;
 
       const pubId = marker.pubData.id;
       const isVisited = marker.pubData.visited;
 
-      let noteHtml = marker.pubData.note
-        ? `<div style="font-size: 10px; color: #333;">⚠️ ${marker.pubData.note}</div>`
+      let addressHtml = marker.pubData.address
+        ? `<div style="font-size: 10px; color: #777; margin-top: 3px;">📍 ${marker.pubData.address}</div>`
         : "";
 
-      // Widoczne dla Admina LUB Superadmina
+      let imgHtml = marker.pubData.image_url
+        ? `<img src="${marker.pubData.image_url}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; margin-right: 10px;">`
+        : "";
+
+      let noteHtml = marker.pubData.note
+        ? `<div style="font-size: 10px; color: #333; margin-top: 4px;">⚠️ ${marker.pubData.note}</div>`
+        : "";
+
       let adminButtons =
         isAdmin || isSuperadmin
           ? `<button onclick="event.stopPropagation(); window.editNote('${pubId}')" style="background:none; border:none; cursor:pointer; font-size:10px;">✏️ note</button>`
           : "";
 
       listHtml += `
-        <div class="pub-list-item" onclick="flyToPub(${marker.pubData.lat}, ${marker.pubData.lng})">
-            <div class="pub-info-group">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <span class="pub-name">${marker.pubData.name}</span>
-                    ${adminButtons}
+        <div id="sidebar-item-${pubId}" class="pub-list-item" onclick="flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
+            <div class="pub-info-group" style="display: flex; align-items: center; width: 100%;">
+                ${imgHtml}
+                <div style="flex-grow: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span class="pub-name">${marker.pubData.name}</span>
+                        ${adminButtons}
+                    </div>
+                    ${addressHtml}
+                    ${noteHtml}
                 </div>
-                ${noteHtml}
             </div>
-            <div class="pub-list-bottom">
+            <div class="pub-list-bottom" style="margin-top: 8px;">
                 <span style="font-size: 8px; font-weight: 900; color: #666; text-transform: uppercase;">
                     ${isVisited ? "VISITED" : "TO VISIT"}
                 </span>
-                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); toggleVisitState('${pubId}')">
+                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); window.toggleVisitState('${pubId}')">
                     ${isVisited ? "✓ VISITED" : "+ MARK"}
                 </button>
             </div>
@@ -526,8 +559,11 @@ function updateSidebarList() {
     }
   });
 
-  document.getElementById("pub-info").innerText = `VISIBLE: ${visibleCount}`;
-  document.getElementById("pub-list-container").innerHTML = listHtml;
+  const pubInfoEl = document.getElementById("pub-info");
+  if (pubInfoEl) pubInfoEl.innerText = `VISIBLE: ${visibleCount}`;
+
+  const pubListContainerEl = document.getElementById("pub-list-container");
+  if (pubListContainerEl) pubListContainerEl.innerHTML = listHtml;
 }
 
 function setFilter(type, btn) {
@@ -548,7 +584,8 @@ function flyToPub(lat, lng) {
   map.setView([lat, lng], 16);
 }
 
-async function toggleVisitState(pubId) {
+// NAPRAWIONE: Upewniono się, że z paska bocznego wizyta też dostaje "visit_history"
+window.toggleVisitState = async function (pubId) {
   const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
   if (!marker) return;
 
@@ -561,40 +598,30 @@ async function toggleVisitState(pubId) {
     marker.pubData.visited = false;
     marker.pubData.visit_date = null;
     marker.pubData.note = null;
+    marker.pubData.review = null;
+    marker.pubData.rating = 0;
+    marker.pubData.is_favorite = false;
+    marker.pubData.visit_history = [];
+    marker.closePopup();
   } else {
     const today = new Date().toISOString().split("T")[0];
-    await supabaseClient
-      .from("visits")
-      .insert([{ user_id: currentUser.id, pub_id: pubId, visit_date: today }]);
+    await supabaseClient.from("visits").insert([
+      {
+        user_id: currentUser.id,
+        pub_id: pubId,
+        visit_date: today,
+        rating: 0,
+        is_favorite: false,
+        visit_history: [today],
+      },
+    ]);
     marker.pubData.visited = true;
     marker.pubData.visit_date = today;
+    marker.pubData.rating = 0;
+    marker.pubData.is_favorite = false;
+    marker.pubData.visit_history = [today];
   }
   applyFilters();
-}
-
-window.editVisitDate = async function (pubId) {
-  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
-  if (!marker) return;
-
-  const currentDate =
-    marker.pubData.visit_date || new Date().toISOString().split("T")[0];
-  const newDate = prompt("Enter visit date (YYYY-MM-DD):", currentDate);
-
-  if (!newDate || newDate.trim() === currentDate) return;
-
-  // Zapis do bazy
-  await supabaseClient
-    .from("visits")
-    .update({ visit_date: newDate })
-    .eq("user_id", currentUser.id)
-    .eq("pub_id", pubId);
-
-  // Aktualizacja stanu i przeładowanie widoku
-  marker.pubData.visit_date = newDate;
-  applyFilters();
-
-  // Ponownie otwieramy dymek, żeby użytkownik od razu zobaczył nową datę
-  marker.openPopup();
 };
 
 // --- PORÓWNYWANIE MAP ---
@@ -675,58 +702,70 @@ function toggleViewMode() {
     }, 100);
   }
 }
-// Sends the selected rating to the Supabase database
+
 window.saveRating = async function (pubId, ratingValue) {
   try {
-    const { data: userData, error: authError } =
-      await supabaseClient.auth.getUser();
-    if (authError || !userData?.user) {
-      console.error("User not authenticated.");
+    const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+    if (!marker) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Jeśli pub nieodwiedzony, stwórz wizytę w locie!
+    if (!marker.pubData.visited) {
+      await supabaseClient.from("visits").insert([
+        {
+          user_id: currentUser.id,
+          pub_id: pubId,
+          visit_date: today,
+          rating: ratingValue,
+          is_favorite: false,
+          visit_history: [today],
+        },
+      ]);
+      marker.pubData.visited = true;
+      marker.pubData.visit_date = today;
+      marker.pubData.visit_history = [today];
+      marker.pubData.rating = ratingValue;
+      applyFilters();
+      window.openPubDetails(pubId);
       return;
     }
 
-    const { error } = await supabaseClient
+    // Normalna aktualizacja dla już odwiedzonych
+    await supabaseClient
       .from("visits")
       .update({ rating: ratingValue })
       .eq("pub_id", pubId)
-      .eq("user_id", userData.user.id);
-
-    if (error) {
-      console.error("Supabase update error:", error);
-      throw error;
-    }
-
-    console.log(`Successfully saved rating ${ratingValue} for pub ${pubId}`);
-
-    // Update local state so stars don't reset until next refresh
-    const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
-    if (marker) {
-      marker.pubData.rating = ratingValue;
-    }
+      .eq("user_id", currentUser.id);
+    marker.pubData.rating = ratingValue;
   } catch (err) {
     console.error("Error saving rating:", err.message);
   }
 };
 
-// Błyskawiczne oznaczanie wizyty przy kliknięciu ikony na mapie
 async function markAsVisited(pubId) {
   const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
   if (!marker || marker.pubData.visited) return;
 
   const today = new Date().toISOString().split("T")[0];
-  await supabaseClient
-    .from("visits")
-    .insert([
-      { user_id: currentUser.id, pub_id: pubId, visit_date: today, rating: 0 },
-    ]);
+  await supabaseClient.from("visits").insert([
+    {
+      user_id: currentUser.id,
+      pub_id: pubId,
+      visit_date: today,
+      rating: 0,
+      is_favorite: false,
+      visit_history: [today],
+    },
+  ]);
 
   marker.pubData.visited = true;
   marker.pubData.visit_date = today;
   marker.pubData.rating = 0;
-  applyFilters();
+  marker.pubData.is_favorite = false;
+  marker.pubData.visit_history = [today];
 }
 
-// Usuwanie wizyty za pomocą przycisku wewnątrz dymka
 window.removeVisit = async function (pubId) {
   const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
   if (!marker) return;
@@ -740,62 +779,13 @@ window.removeVisit = async function (pubId) {
   marker.pubData.visited = false;
   marker.pubData.visit_date = null;
   marker.pubData.note = null;
+  marker.pubData.review = null;
   marker.pubData.rating = 0;
+  marker.pubData.visit_history = [];
+  marker.pubData.is_favorite = false;
   marker.closePopup();
   applyFilters();
 };
-async function setupUserProfile() {
-  let displayName = currentUser.email.split("@")[0];
-
-  // Pobieramy oba statusy z bazy
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("friend_code, nickname, is_admin, is_superadmin")
-    .eq("id", currentUser.id);
-
-  if (error) console.error("Profile fetch error:", error.message);
-
-  if (data && data.length > 0) {
-    const profile = data[0];
-    isAdmin = profile.is_admin === true;
-    isSuperadmin = profile.is_superadmin === true; // Zapisujemy status boski
-
-    document.getElementById("my-friend-code").innerText =
-      profile.friend_code || "⏳...";
-    if (profile.nickname) displayName = profile.nickname;
-  } else {
-    generateNewFriendCode();
-  }
-
-  // Odpowiednia ikonka w zależności od rangi
-  let displayHtml = `${displayName} ▼`;
-  if (isSuperadmin) displayHtml = `👑 ${displayName} ▼`;
-  else if (isAdmin) displayHtml = `🛠️ ${displayName} ▼`;
-
-  document.getElementById("user-display").innerText = displayHtml;
-
-  // Przycisk nadawania i odbierania uprawnień dodawany TYLKO dla Superadmina
-  if (isSuperadmin) {
-    let dropdown = document.getElementById("user-dropdown");
-    if (dropdown && !document.getElementById("btn-make-admin")) {
-      // 1. Przycisk awansowania
-      const grantBtn = document.createElement("button");
-      grantBtn.id = "btn-make-admin";
-      grantBtn.innerHTML = "👑 Grant Admin";
-      grantBtn.style.color = "#f39c12"; // Złoty
-      grantBtn.onclick = window.grantAdminStatus;
-      dropdown.insertBefore(grantBtn, dropdown.firstChild);
-
-      // 2. Przycisk degradowania (NOWY)
-      const revokeBtn = document.createElement("button");
-      revokeBtn.id = "btn-revoke-admin";
-      revokeBtn.innerHTML = "❌ Revoke Admin";
-      revokeBtn.style.color = "#e74c3c"; // Czerwony
-      revokeBtn.onclick = window.revokeAdminStatus;
-      dropdown.insertBefore(revokeBtn, grantBtn.nextSibling);
-    }
-  }
-}
 
 window.grantAdminStatus = async function () {
   if (!isSuperadmin) {
@@ -839,6 +829,7 @@ window.grantAdminStatus = async function () {
     }
   }
 };
+
 window.revokeAdminStatus = async function () {
   if (!isSuperadmin) {
     alert("Only a Superadmin can revoke permissions.");
@@ -883,17 +874,255 @@ window.revokeAdminStatus = async function () {
     }
   }
 };
-// Oblicza ile dni zostało z 30-dniowego limitu
-function getDaysRemaining(lastDateString) {
-  if (!lastDateString) return 0; // Nigdy nie zmieniano
 
-  const lastDate = new Date(lastDateString);
-  const now = new Date();
-  const diffTime = now - lastDate;
-  const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+window.toggleFavorite = async function (pubId) {
+  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker) return;
 
-  return Math.max(0, 30 - daysPassed);
-}
+  const newState = !marker.pubData.is_favorite;
+  const today = new Date().toISOString().split("T")[0];
+
+  // Jeśli pub nieodwiedzony, stwórz wizytę w locie!
+  if (!marker.pubData.visited) {
+    await supabaseClient.from("visits").insert([
+      {
+        user_id: currentUser.id,
+        pub_id: pubId,
+        visit_date: today,
+        rating: 0,
+        is_favorite: newState,
+        visit_history: [today],
+      },
+    ]);
+    marker.pubData.visited = true;
+    marker.pubData.visit_date = today;
+    marker.pubData.visit_history = [today];
+    marker.pubData.is_favorite = newState;
+    applyFilters();
+    window.openPubDetails(pubId);
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("visits")
+    .update({ is_favorite: newState })
+    .eq("user_id", currentUser.id)
+    .eq("pub_id", pubId);
+
+  if (!error) {
+    marker.pubData.is_favorite = newState;
+    const btn = document.getElementById("favorite-btn");
+    if (btn) {
+      btn.style.color = newState ? "#e74c3c" : "#777";
+      btn.style.borderColor = newState ? "#e74c3c" : "#ccc";
+      btn.innerHTML = newState ? "❤️ Favorited" : "🤍 Mark as Favorite";
+    }
+    applyFilters();
+  }
+};
+
+window.openPubDetails = function (pubId) {
+  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker) return;
+
+  const pub = marker.pubData;
+  const currentRating = pub.rating || 0;
+  const comm = pub.community;
+  const isVisited = pub.visited;
+
+  const communityText =
+    comm && comm.count > 0
+      ? `Community: <strong style="color: #ffd700;">${comm.avg} ★</strong> <span style="font-size: 9px;">(${comm.count} total)</span>`
+      : `No community ratings yet`;
+
+  const oldModal = document.getElementById("pub-modal-overlay");
+  if (oldModal) oldModal.remove();
+
+  // Adres i zdjęcie (widoczne zawsze)
+  const imgHtml = pub.image_url
+    ? `<img src="${pub.image_url}" style="width: 100%; height: 130px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
+    : "";
+  const addressHtml = pub.address
+    ? `<div style="font-size: 12px; color: #777; margin-bottom: 15px;">📍 ${pub.address}</div>`
+    : "";
+
+  // Historia i Teksty przycisków dopasowane do stanu pubu
+  let historyHtml =
+    pub.visit_history && pub.visit_history.length > 0
+      ? pub.visit_history
+          .map((d) => `<li style="margin-bottom:4px;">${d}</li>`)
+          .join("")
+      : isVisited && pub.visit_date
+        ? `<li>${pub.visit_date}</li>`
+        : `<li style="color: #999; font-style: italic;">No visits yet</li>`;
+
+  const visitsCount = pub.visit_history
+    ? pub.visit_history.length
+    : isVisited
+      ? 1
+      : 0;
+  const buttonAddText = isVisited
+    ? "+ Add another visit"
+    : "+ Add your first visit";
+
+  const modalHtml = `
+    <div id="pub-modal-overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
+      <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 320px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; text-align: center;">
+        
+        <button onclick="document.getElementById('pub-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; border: none; background: #eee; border-radius: 50%; width: 26px; height: 26px; font-size: 14px; cursor: pointer; z-index: 10; display:flex; align-items:center; justify-content:center;">✖</button>
+        
+        <h2 style="margin: 0 0 5px 0; font-size: 20px; padding-right: 25px;">${pub.name}</h2>
+        ${addressHtml}
+        ${imgHtml}
+        
+        <button id="favorite-btn" onclick="window.toggleFavorite('${pubId}')" style="background: none; border: 1px solid ${pub.is_favorite ? "#e74c3c" : "#ccc"}; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: 15px; color: ${pub.is_favorite ? "#e74c3c" : "#777"};">
+          ${pub.is_favorite ? "❤️ Favorited" : "🤍 Mark as Favorite"}
+        </button>
+
+        <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+          <span style="font-size: 12px; font-weight: bold; color: #555;">Your rating:</span><br>
+          ${getStarsHtml(pubId, currentRating)}
+          <div style="font-size: 11px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">${communityText}</div>
+        </div>
+        
+        <div style="margin-bottom: 15px; text-align: left;">
+          <label style="font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">🔒 Private Note:</label>
+          <textarea id="modal-note" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${pub.note || ""}</textarea>
+
+          <label style="font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">💬 Public Review:</label>
+          <textarea id="modal-review" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${pub.review || ""}</textarea>
+          
+          <button onclick="window.savePubTexts('${pubId}')" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Save Note & Review</button>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <strong style="font-size: 13px; color: #333;">History (${visitsCount}):</strong>
+          <ul style="padding-left: 20px; margin-top: 8px; font-size: 13px; color: #555; max-height: 80px; overflow-y: auto; text-align: left;">${historyHtml}</ul>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button onclick="window.handleAddVisit('${pubId}')" style="background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold;">${buttonAddText}</button>
+          ${isVisited ? `<button onclick="if(confirm('Delete ALL visits?')) { window.removeVisit('${pubId}'); document.getElementById('pub-modal-overlay').remove(); }" style="background: #fff; color: #e74c3c; border: 1px solid #e74c3c; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 12px; font-weight:bold;">🗑️ Remove pub from list</button>` : ""}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+};
+
+window.savePubTexts = async function (pubId) {
+  const noteVal = document.getElementById("modal-note").value;
+  const reviewVal = document.getElementById("modal-review").value;
+  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker) return;
+
+  const today = new Date().toISOString().split("T")[0];
+
+  // Jeśli pub nieodwiedzony, stwórz wizytę w locie!
+  if (!marker.pubData.visited) {
+    await supabaseClient.from("visits").insert([
+      {
+        user_id: currentUser.id,
+        pub_id: pubId,
+        visit_date: today,
+        rating: 0,
+        is_favorite: false,
+        visit_history: [today],
+        note: noteVal,
+        review: reviewVal,
+      },
+    ]);
+    marker.pubData.visited = true;
+    marker.pubData.visit_date = today;
+    marker.pubData.visit_history = [today];
+    marker.pubData.note = noteVal;
+    marker.pubData.review = reviewVal;
+    applyFilters();
+    window.openPubDetails(pubId);
+    alert("Visit created & Text saved! 💾");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("visits")
+    .update({ note: noteVal, review: reviewVal })
+    .eq("user_id", currentUser.id)
+    .eq("pub_id", pubId);
+
+  if (!error) {
+    marker.pubData.note = noteVal;
+    marker.pubData.review = reviewVal;
+    loadPubs();
+    alert("Note & Review saved successfully! 💾");
+  } else {
+    alert("Error saving text: " + error.message);
+  }
+};
+window.handleAddVisit = async function (pubId) {
+  const marker = markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker) return;
+
+  const isFirstVisit = !marker.pubData.visited;
+
+  // Wspólny dymek pytający o datę
+  const promptText = isFirstVisit
+    ? "Enter your first visit date (YYYY-MM-DD):"
+    : "Enter new visit date (YYYY-MM-DD):";
+
+  const newDate = window.prompt(
+    promptText,
+    new Date().toISOString().split("T")[0],
+  );
+  if (!newDate) return;
+
+  if (isFirstVisit) {
+    // 1. Scenariusz: Pierwsza wizyta
+    const { error } = await supabaseClient.from("visits").insert([
+      {
+        user_id: currentUser.id,
+        pub_id: pubId,
+        visit_date: newDate,
+        rating: 0,
+        is_favorite: false,
+        visit_history: [newDate],
+      },
+    ]);
+
+    if (!error) {
+      marker.pubData.visited = true;
+      marker.pubData.visit_date = newDate;
+      marker.pubData.rating = 0;
+      marker.pubData.is_favorite = false;
+      marker.pubData.visit_history = [newDate];
+    } else {
+      alert("Error marking pub as visited: " + error.message);
+      return;
+    }
+  } else {
+    // 2. Scenariusz: Kolejna wizyta
+    const history = [...(marker.pubData.visit_history || [])];
+    history.push(newDate);
+    history.sort().reverse();
+
+    const { error } = await supabaseClient
+      .from("visits")
+      .update({ visit_history: history, visit_date: history[0] })
+      .eq("user_id", currentUser.id)
+      .eq("pub_id", pubId);
+
+    if (!error) {
+      marker.pubData.visit_history = history;
+      marker.pubData.visit_date = history[0];
+    } else {
+      alert("Error adding visit: " + error.message);
+      return;
+    }
+  }
+
+  applyFilters();
+  window.openPubDetails(pubId); // Otwieramy/odświeżamy Modal z nowymi danymi!
+};
 
 window.changePassword = changePassword;
 window.changeNickname = changeNickname;
