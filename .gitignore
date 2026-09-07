@@ -2,3 +2,4 @@ node_modules/
 importer.js
 admin-keys.js
 osm_data.json
+.env

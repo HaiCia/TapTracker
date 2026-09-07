@@ -33,7 +33,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
 
-    <script>
+    <script type="module">
+      import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+      
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
@@ -81,6 +83,10 @@
           ? "Already have an account? Log in"
           : "Need an account? Sign up";
       }
+
+      // Przypisanie do window dla onclick z HTML
+      window.handleAuth = handleAuth;
+      window.toggleMode = toggleMode;
 
       // Listen for Enter keypress to trigger login button click
       document.addEventListener("keydown", function (event) {
