@@ -2,6 +2,17 @@ import { supabaseClient } from './api.js';
 import { state } from './state.js';
 import { applyFilters } from './map.js';
 
+// --- XSS Protection Function ---
+export function escapeHTML(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function getMarkerHtml(isVisited, pubId, isFriendVisited = false) {
   let containerClass = "";
   let innerHtml = "<span>🍺</span>";
@@ -58,15 +69,15 @@ export function updateSidebarList() {
       const isVisited = marker.pubData.visited;
 
       let addressHtml = marker.pubData.address
-        ? `<div style="font-size: 10px; color: #777; margin-top: 3px;">📍 ${marker.pubData.address}</div>`
+        ? `<div style="font-size: 10px; color: #777; margin-top: 3px;">📍 ${escapeHTML(marker.pubData.address)}</div>`
         : "";
 
       let imgHtml = marker.pubData.image_url
-        ? `<img src="${marker.pubData.image_url}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; margin-right: 10px;">`
+        ? `<img src="${escapeHTML(marker.pubData.image_url)}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; margin-right: 10px;">`
         : "";
 
       let noteHtml = marker.pubData.note
-        ? `<div style="font-size: 10px; color: #333; margin-top: 4px;">⚠️ ${marker.pubData.note}</div>`
+        ? `<div style="font-size: 10px; color: #333; margin-top: 4px;">⚠️ ${escapeHTML(marker.pubData.note)}</div>`
         : "";
 
       let adminButtons = (state.isAdmin || state.isSuperadmin)
@@ -79,7 +90,7 @@ export function updateSidebarList() {
                 ${imgHtml}
                 <div style="flex-grow: 1;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span class="pub-name">${marker.pubData.name}</span>
+                        <span class="pub-name">${escapeHTML(marker.pubData.name)}</span>
                         ${adminButtons}
                     </div>
                     ${addressHtml}
@@ -343,16 +354,16 @@ export function openPubDetails(pubId) {
   if (oldModal) oldModal.remove();
 
   const imgHtml = pub.image_url
-    ? `<img src="${pub.image_url}" style="width: 100%; height: 130px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
+    ? `<img src="${escapeHTML(pub.image_url)}" style="width: 100%; height: 130px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
     : "";
   const addressHtml = pub.address
-    ? `<div style="font-size: 12px; color: #777; margin-bottom: 15px;">📍 ${pub.address}</div>`
+    ? `<div style="font-size: 12px; color: #777; margin-bottom: 15px;">📍 ${escapeHTML(pub.address)}</div>`
     : "";
 
   let historyHtml = pub.visit_history && pub.visit_history.length > 0
-    ? pub.visit_history.map((d) => `<li style="margin-bottom:4px;">${d}</li>`).join("")
+    ? pub.visit_history.map((d) => `<li style="margin-bottom:4px;">${escapeHTML(d)}</li>`).join("")
     : isVisited && pub.visit_date
-      ? `<li>${pub.visit_date}</li>`
+      ? `<li>${escapeHTML(pub.visit_date)}</li>`
       : `<li style="color: #999; font-style: italic;">No visits yet</li>`;
 
   const visitsCount = pub.visit_history ? pub.visit_history.length : isVisited ? 1 : 0;
@@ -364,7 +375,7 @@ export function openPubDetails(pubId) {
         
         <button onclick="document.getElementById('pub-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; border: none; background: #eee; border-radius: 50%; width: 26px; height: 26px; font-size: 14px; cursor: pointer; z-index: 10; display:flex; align-items:center; justify-content:center;">✖</button>
         
-        <h2 style="margin: 0 0 5px 0; font-size: 20px; padding-right: 25px;">${pub.name}</h2>
+        <h2 style="margin: 0 0 5px 0; font-size: 20px; padding-right: 25px;">${escapeHTML(pub.name)}</h2>
         ${addressHtml}
         ${imgHtml}
         
@@ -380,10 +391,10 @@ export function openPubDetails(pubId) {
         
         <div style="margin-bottom: 15px; text-align: left;">
           <label style="font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">🔒 Private Note:</label>
-          <textarea id="modal-note" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${pub.note || ""}</textarea>
+          <textarea id="modal-note" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.note || "")}</textarea>
 
           <label style="font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">💬 Public Review:</label>
-          <textarea id="modal-review" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${pub.review || ""}</textarea>
+          <textarea id="modal-review" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.review || "")}</textarea>
           
           <button onclick="window.savePubTexts('${pubId}')" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Save Note & Review</button>
         </div>

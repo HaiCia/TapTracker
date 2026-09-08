@@ -1,6 +1,6 @@
 import { supabaseClient } from './api.js';
 import { state } from './state.js';
-import { getMarkerHtml, updateSidebarList, openPubDetails, highlightSidebar } from './ui.js';
+import { getMarkerHtml, updateSidebarList, openPubDetails, highlightSidebar, escapeHTML } from './ui.js';
 
 export function initMap() {
   state.map = L.map("map").setView([53.8008, -1.5491], 13);
@@ -199,7 +199,7 @@ export function applyFilters() {
     );
 
     marker.bindTooltip(
-      `<div style="font-size:12px; font-weight:bold;">${marker.pubData.name}</div>`,
+      `<div style="font-size:12px; font-weight:bold;">${escapeHTML(marker.pubData.name)}</div>`,
       { direction: "top", offset: [0, -15], opacity: 0.95 }
     );
 
