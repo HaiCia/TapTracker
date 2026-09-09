@@ -30,7 +30,8 @@ import {
   toggleFavorite,
   openPubDetails,
   savePubTexts,
-  handleAddVisit
+  handleAddVisit,
+  saveAdminPubInfo
 } from './ui.js';
 
 async function startApp() {
@@ -82,6 +83,7 @@ window.toggleFavorite = toggleFavorite;
 window.openPubDetails = openPubDetails;
 window.savePubTexts = savePubTexts;
 window.handleAddVisit = handleAddVisit;
+window.saveAdminPubInfo = saveAdminPubInfo;
 window.editNote = function(pubId) {
     alert("Edit note function is not implemented yet. Use 'note' in pub details.");
 };

@@ -77,11 +77,25 @@ async function runSync() {
         (subPub) => getDistance(lat, lng, subPub.lat, subPub.lng) <= 0.5
       );
 
+      let fullAddress = "";
+      if (osmPub.tags) {
+        const street = osmPub.tags["addr:street"] || "";
+        const houseNumber = osmPub.tags["addr:housenumber"] || "";
+        const city = osmPub.tags["addr:city"] || "";
+        const postcode = osmPub.tags["addr:postcode"] || "";
+        
+        let streetPart = street;
+        if (houseNumber) streetPart += ` ${houseNumber}`;
+        
+        fullAddress = [streetPart, city, postcode].filter(Boolean).join(", ");
+      }
+
       if (!found) {
         pubsToInsert.push({
           name: name,
           lat: lat,
           lng: lng,
+          address: fullAddress,
           image_url: "https://www.jdwetherspoon.com/~/media/Images/Jdw/icons/jdw-logo-red.png"
         });
       }

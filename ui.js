@@ -281,6 +281,31 @@ export async function markAsVisited(pubId) {
   marker.pubData.visit_history = [today];
 }
 
+export async function saveAdminPubInfo(pubId) {
+  if (!state.isAdmin && !state.isSuperadmin) return;
+  const newAddress = document.getElementById("admin-address").value;
+  const newImage = document.getElementById("admin-image").value;
+
+  const { error } = await supabaseClient
+    .from("pubs")
+    .update({ address: newAddress, image_url: newImage })
+    .eq("id", pubId);
+
+  if (error) {
+    console.error("Error updating pub info:", error);
+    alert("Błąd: Nie udało się zaktualizować danych pubu. Sprawdź RLS.");
+  } else {
+    const marker = state.markers.find((m) => String(m.pubData.id) === String(pubId));
+    if (marker) {
+      marker.pubData.address = newAddress;
+      marker.pubData.image_url = newImage;
+    }
+    updateSidebarList();
+    openPubDetails(pubId);
+    alert("Dane pubu zaktualizowane globalnie!");
+  }
+}
+
 export async function removeVisit(pubId) {
   const marker = state.markers.find((m) => String(m.pubData.id) === String(pubId));
   if (!marker) return;
@@ -408,6 +433,19 @@ export function openPubDetails(pubId) {
           <button onclick="window.handleAddVisit('${pubId}')" style="background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold;">${buttonAddText}</button>
           ${isVisited ? `<button onclick="if(confirm('Delete ALL visits?')) { window.removeVisit('${pubId}'); document.getElementById('pub-modal-overlay').remove(); }" style="background: #fff; color: #e74c3c; border: 1px solid #e74c3c; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 12px; font-weight:bold;">🗑️ Remove pub from list</button>` : ""}
         </div>
+
+        ${(state.isAdmin || state.isSuperadmin) ? `
+          <div style="margin-top: 25px; padding-top: 15px; border-top: 2px dashed #e74c3c; text-align: left;">
+            <strong style="font-size: 12px; color: #e74c3c;">🛠️ Admin Tools (Pub Data)</strong>
+            <label style="font-size: 10px; color: #333; display: block; margin-top: 8px;">Address:</label>
+            <input type="text" id="admin-address" value="${escapeHTML(pub.address || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px;">
+            
+            <label style="font-size: 10px; color: #333; display: block;">Image URL:</label>
+            <input type="text" id="admin-image" value="${escapeHTML(pub.image_url || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px;">
+            
+            <button onclick="window.saveAdminPubInfo('${pubId}')" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Zapisz dane globalne pubu</button>
+          </div>
+        ` : ""}
       </div>
     </div>
   `;
