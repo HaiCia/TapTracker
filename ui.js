@@ -13,7 +13,7 @@ export function escapeHTML(str) {
     .replace(/'/g, "&#039;");
 }
 
-export function getMarkerHtml(isVisited, pubId, isFriendVisited = false) {
+export function getMarkerHtml(isVisited, pubId, isFriendVisited = false, isFavorite = false) {
   let containerClass = "";
   let innerHtml = "<span>🍺</span>";
 
@@ -26,6 +26,10 @@ export function getMarkerHtml(isVisited, pubId, isFriendVisited = false) {
   } else if (isFriendVisited) {
     containerClass = "is-friend-visited";
     innerHtml += '<div class="tick">👋</div>';
+  }
+
+  if (isFavorite) {
+    innerHtml += '<div style="position:absolute; top:-8px; right:-8px; font-size:14px; z-index:10;">❤️</div>';
   }
 
   return `<div class="pub-icon-container ${containerClass}">${innerHtml}</div>`;
@@ -77,32 +81,60 @@ export function updateSidebarList() {
         : "";
 
       let noteHtml = marker.pubData.note
-        ? `<div style="font-size: 10px; color: #333; margin-top: 4px;">⚠️ ${escapeHTML(marker.pubData.note)}</div>`
+        ? `<div style="font-size: 11px; color: #333; margin-top: 8px; background: #fff8e1; padding: 6px; border-left: 3px solid #f39c12;">🔒 ${escapeHTML(marker.pubData.note)}</div>`
         : "";
 
+      let reviewHtml = marker.pubData.review
+        ? `<div style="font-size: 11px; color: #333; margin-top: 6px; background: #e8f8f5; padding: 6px; border-left: 3px solid #1abc9c;">💬 ${escapeHTML(marker.pubData.review)}</div>`
+        : "";
+
+      const comm = marker.pubData.community || { avg: 0, count: 0 };
+      const communityText = comm.count > 0
+        ? `<span style="color: #f39c12; font-weight:bold;">${comm.avg} ★</span> (${comm.count} total)`
+        : `No ratings`;
+
+      const myRatingText = marker.pubData.rating && marker.pubData.rating > 0
+        ? `<span style="color: #f39c12; font-weight:bold;">${marker.pubData.rating} ★</span>`
+        : `Unrated`;
+
+      const visitsCount = marker.pubData.visit_history ? marker.pubData.visit_history.length : isVisited ? 1 : 0;
+      const historySummary = visitsCount > 0
+        ? `Visits: ${visitsCount} (Last: ${marker.pubData.visit_history[marker.pubData.visit_history.length - 1]})`
+        : `Never visited`;
+
       let adminButtons = (state.isAdmin || state.isSuperadmin)
-          ? `<button onclick="event.stopPropagation(); window.editNote('${pubId}')" style="background:none; border:none; cursor:pointer; font-size:10px;">✏️ note</button>`
+          ? `<button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="background:none; border:none; cursor:pointer; font-size:10px;">✏️ EDIT</button>`
           : "";
 
+      const favIcon = marker.pubData.is_favorite ? '<span style="font-size: 14px;">❤️</span>' : '';
+
       listHtml += `
-        <div id="sidebar-item-${pubId}" class="pub-list-item" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
-            <div class="pub-info-group" style="display: flex; align-items: center; width: 100%;">
+        <div id="sidebar-item-${pubId}" class="pub-list-item" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');" style="padding-bottom: 12px; border-bottom: 1px solid #eee;">
+            <div class="pub-info-group" style="display: flex; align-items: flex-start; width: 100%;">
                 ${imgHtml}
                 <div style="flex-grow: 1;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span class="pub-name">${escapeHTML(marker.pubData.name)}</span>
+                        <span class="pub-name" style="font-size: 14px;">${favIcon} ${escapeHTML(marker.pubData.name)}</span>
                         ${adminButtons}
                     </div>
                     ${addressHtml}
+                    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #666; margin-top: 6px;">
+                        <span>My Rating: ${myRatingText}</span>
+                        <span>Community: ${communityText}</span>
+                    </div>
+                    <div style="font-size: 10px; color: #555; margin-top: 4px; font-style: italic;">
+                        🕒 ${historySummary}
+                    </div>
                     ${noteHtml}
+                    ${reviewHtml}
                 </div>
             </div>
-            <div class="pub-list-bottom" style="margin-top: 8px;">
-                <span style="font-size: 8px; font-weight: 900; color: #666; text-transform: uppercase;">
-                    ${isVisited ? "VISITED" : "TO VISIT"}
+            <div class="pub-list-bottom" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 9px; font-weight: 900; color: #666; text-transform: uppercase;">
+                    ${isVisited ? "STATUS: VISITED" : "STATUS: TO VISIT"}
                 </span>
-                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); window.toggleVisitState('${pubId}')">
-                    ${isVisited ? "✓ VISITED" : "+ MARK"}
+                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 4px 10px; font-size: 10px;">
+                    ${isVisited ? "📖 VIEW DETAILS" : "+ MARK / VIEW"}
                 </button>
             </div>
         </div>

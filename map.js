@@ -157,7 +157,7 @@ export async function loadPubs() {
 
       const marker = L.marker([pub.lat, pub.lng], {
         icon: L.divIcon({
-          html: getMarkerHtml(isVisited, pub.id, false),
+          html: getMarkerHtml(isVisited, pub.id, false, pub.is_favorite),
           className: "custom-icon",
           iconSize: [36, 36],
           iconAnchor: [18, 18],
@@ -176,6 +176,7 @@ export function applyFilters() {
 
   state.markers.forEach((marker) => {
     const isVisited = marker.pubData.visited;
+    const isFavorite = marker.pubData.is_favorite;
     const pubId = marker.pubData.id;
     const isFriendVisited = state.isComparing &&
       (state.friendVisitData[pubId] || state.friendVisitData[String(pubId)] || state.friendVisitData[Number(pubId)]);
@@ -183,12 +184,18 @@ export function applyFilters() {
     const matchesFilter =
       state.currentFilterType === "all" ||
       (state.currentFilterType === "visited" && (isVisited || isFriendVisited)) ||
-      (state.currentFilterType === "unvisited" && !isVisited);
+      (state.currentFilterType === "unvisited" && !isVisited) ||
+      (state.currentFilterType === "favorites" && isFavorite);
 
-    const matchesSearch = marker.pubData.name.toLowerCase().includes(state.currentSearchQuery);
+    // Search by name, address, postcode
+    const query = state.currentSearchQuery.toLowerCase();
+    const nameMatch = marker.pubData.name.toLowerCase().includes(query);
+    const addressMatch = marker.pubData.address ? marker.pubData.address.toLowerCase().includes(query) : false;
+    const matchesSearch = nameMatch || addressMatch;
+    
     marker.matchesFilters = matchesFilter && matchesSearch;
 
-    const updatedHtml = getMarkerHtml(isVisited, pubId, isFriendVisited);
+    const updatedHtml = getMarkerHtml(isVisited, pubId, isFriendVisited, isFavorite);
     marker.setIcon(
       L.divIcon({
         html: updatedHtml,
