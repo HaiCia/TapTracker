@@ -37,7 +37,8 @@ import {
   checkOut,
   sendChatMessage,
   loadChatMessages,
-  renderChatMessages
+  renderChatMessages,
+  toggleSidebarChat
 } from './ui.js';
 
 async function startApp() {
