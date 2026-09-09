@@ -100,9 +100,9 @@ window.toggleDarkMode = function() {
 document.addEventListener('click', function(event) {
   const dropdown = document.getElementById("user-dropdown");
   const btn = document.getElementById("user-display");
-  if (dropdown && !dropdown.classList.contains("hidden")) {
+  if (dropdown && dropdown.classList.contains("show")) {
     if (!dropdown.contains(event.target) && event.target !== btn) {
-      dropdown.classList.add("hidden");
+      dropdown.classList.remove("show");
     }
   }
 });

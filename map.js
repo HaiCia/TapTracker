@@ -78,8 +78,8 @@ export function initMap() {
 
   state.map.on("click", function () {
     const dropdown = document.getElementById("user-dropdown");
-    if (dropdown && !dropdown.classList.contains("hidden")) {
-      dropdown.classList.add("hidden");
+    if (dropdown && dropdown.classList.contains("show")) {
+      dropdown.classList.remove("show");
     }
   });
 

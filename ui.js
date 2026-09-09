@@ -130,8 +130,8 @@ export function updateSidebarList() {
                 <span style="font-size: 10px; font-weight: 900; color: ${isVisited ? '#27ae60' : '#7f8c8d'}; text-transform: uppercase;">
                     ${isVisited ? "✔️ VISITED" : "❌ TO VISIT"}
                 </span>
-                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); window.toggleVisitState('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
-                    ${isVisited ? "UNMARK" : "+ ADD VISIT"}
+                <button class="pub-status-btn status-unvisited" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
+                    ${isVisited ? "+ ADD ANOTHER VISIT" : "+ ADD VISIT"}
                 </button>
                 <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #f0f2f5; border: 1px solid #ddd; color: #444; width: 100%; cursor: pointer;">
                     📖 VIEW
@@ -442,13 +442,13 @@ export function openPubDetails(pubId) {
     : "";
 
   let historyHtml = pub.visit_history && pub.visit_history.length > 0
-    ? pub.visit_history.map((d) => `<li style="margin-bottom:4px;">${escapeHTML(d)}</li>`).join("")
+    ? pub.visit_history.map((d, index) => `<li style="margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">${escapeHTML(d)} ${state.currentUser ? `<button onclick="window.removeSingleVisit('${pubId}', ${index})" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px;">✖</button>` : ""}</li>`).join("")
     : isVisited && pub.visit_date
-      ? `<li>${escapeHTML(pub.visit_date)}</li>`
+      ? `<li style="margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">${escapeHTML(pub.visit_date)} ${state.currentUser ? `<button onclick="if(confirm('Delete visit?')) window.toggleVisitState('${pubId}')" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px;">✖</button>` : ""}</li>`
       : `<li style="color: #999; font-style: italic;">No visits yet</li>`;
 
   const visitsCount = pub.visit_history ? pub.visit_history.length : isVisited ? 1 : 0;
-  const buttonAddText = isVisited ? "+ Add another visit" : "+ Add your first visit";
+  
 
   const modalHtml = `
     <div id="pub-modal-overlay" onclick="if(event.target === this) document.getElementById('pub-modal-overlay').remove()" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
@@ -498,8 +498,7 @@ export function openPubDetails(pubId) {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button onclick="window.handleAddVisit('${pubId}')" style="background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold;">${buttonAddText}</button>
-          ${isVisited ? `<button onclick="if(confirm('Delete ALL visits?')) { window.removeVisit('${pubId}'); document.getElementById('pub-modal-overlay').remove(); }" style="background: #fff; color: #e74c3c; border: 1px solid #e74c3c; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 12px; font-weight:bold;">🗑️ Remove pub from list</button>` : ""}
+          ${!isVisited ? `<button onclick="window.handleAddVisit('${pubId}')" style="background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; width: 100%;">+ ADD VISIT</button>` : `<button onclick="if(confirm('Delete ALL visits?')) { window.toggleVisitState('${pubId}'); document.getElementById('pub-modal-overlay').remove(); }" style="background: var(--bg-primary); color: #e74c3c; border: 1px solid #e74c3c; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px;">❌ UNMARK (Delete Visits)</button>`}
         </div>
 
         ${(state.isAdmin || state.isSuperadmin) ? `
