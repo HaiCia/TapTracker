@@ -74,7 +74,7 @@ export function updateSidebarList() {
       const isVisited = marker.pubData.visited;
 
       let addressHtml = marker.pubData.address
-        ? `<div style="font-size: 11px; color: #555; margin-top: 3px; font-weight: 500;">📍 ${escapeHTML(marker.pubData.address)}</div>`
+        ? `<div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px; font-weight: 500;">📍 ${escapeHTML(marker.pubData.address)}</div>`
         : "";
 
       let imgHtml = marker.pubData.image_url
@@ -82,11 +82,11 @@ export function updateSidebarList() {
         : `<div style="width: 75px; height: 75px; background: #f0f2f5; border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#ccc; font-size: 24px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
 
       let noteHtml = marker.pubData.note
-        ? `<div style="font-size: 11px; color: #111; margin-top: 6px; background: #fff8e1; padding: 4px 6px; border-radius: 4px; border-left: 3px solid #f39c12; font-weight: 500;">🔒 ${escapeHTML(marker.pubData.note)}</div>`
+        ? `<div style="font-size: 11px; color: var(--text-primary); margin-top: 6px; background: rgba(243, 156, 18, 0.15); padding: 4px 6px; border-radius: 4px; border-left: 3px solid #f39c12; font-weight: 500;">🔒 ${escapeHTML(marker.pubData.note)}</div>`
         : "";
 
       let reviewHtml = marker.pubData.review
-        ? `<div style="font-size: 11px; color: #111; margin-top: 4px; background: #e8f8f5; padding: 4px 6px; border-radius: 4px; border-left: 3px solid #1abc9c; font-weight: 500;">💬 ${escapeHTML(marker.pubData.review)}</div>`
+        ? `<div style="font-size: 11px; color: var(--text-primary); margin-top: 4px; background: rgba(26, 188, 156, 0.15); padding: 4px 6px; border-radius: 4px; border-left: 3px solid #1abc9c; font-weight: 500;">💬 ${escapeHTML(marker.pubData.review)}</div>`
         : "";
 
       const comm = marker.pubData.community || { avg: 0, count: 0 };
@@ -105,35 +105,35 @@ export function updateSidebarList() {
       const favIcon = marker.pubData.is_favorite ? '<span style="font-size: 14px; margin-right: 4px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));">❤️</span>' : '';
 
       listHtml += `
-        <div id="sidebar-item-${pubId}" class="pub-list-item" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');" style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #ddd; gap: 12px; cursor: pointer;">
+        <div id="sidebar-item-${pubId}" class="pub-list-item" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');" style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-light); gap: 12px; cursor: pointer;">
             ${imgHtml}
             
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
-                <div style="font-size: 15px; font-weight: 900; color: #111; display: flex; align-items: center; line-height: 1.2;">
+                <div style="font-size: 15px; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; line-height: 1.2;">
                     ${favIcon} <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(marker.pubData.name)}</span> ${adminButtons}
                 </div>
                 ${addressHtml}
                 
-                <div style="font-size: 11px; color: #333; margin-top: 6px; font-weight: 700; display: flex; gap: 8px; flex-wrap: wrap;">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-weight: 700; display: flex; gap: 8px; flex-wrap: wrap;">
                     <span>⭐ ${myRatingText}</span>
                     <span>👥 ${communityText}</span>
                 </div>
                 
-                <div style="font-size: 10px; color: #555; margin-top: 4px; font-style: italic;">
+                <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px; font-style: italic;">
                     🕒 ${marker.pubData.visit_history && marker.pubData.visit_history.length > 0 ? `Visits: ${marker.pubData.visit_history.length} (Last: ${marker.pubData.visit_history[marker.pubData.visit_history.length - 1]})` : `Never visited`}
                 </div>
                 
                 ${noteHtml}
                 ${reviewHtml}
             </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; min-width: 90px;">
+            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; min-width: 120px;">
                 <span style="font-size: 10px; font-weight: 900; color: ${isVisited ? '#27ae60' : '#7f8c8d'}; text-transform: uppercase;">
                     ${isVisited ? "✔️ VISITED" : "❌ TO VISIT"}
                 </span>
                 <button class="pub-status-btn status-unvisited" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
-                    ${isVisited ? "+ ADD ANOTHER VISIT" : "+ ADD VISIT"}
+                    ${isVisited ? "+ ADD AGAIN" : "+ ADD VISIT"}
                 </button>
-                <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #f0f2f5; border: 1px solid #ddd; color: #444; width: 100%; cursor: pointer;">
+                <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-secondary); width: 100%; cursor: pointer;">
                     📖 VIEW
                 </button>
             </div>
@@ -465,7 +465,7 @@ export function openPubDetails(pubId) {
         </button>
 
         <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-          <span style="font-size: 12px; font-weight: bold; color: #555;">Your rating:</span><br>
+          <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">Your rating:</span><br>
           ${getStarsHtml(pubId, currentRating)}
           <div style="font-size: 11px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">${communityText}</div>
         </div>
@@ -486,15 +486,15 @@ export function openPubDetails(pubId) {
           <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 3px;">🔒 Private Note:</label>
           <textarea id="modal-note" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.note || "")}</textarea>
 
-          <label style="font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">💬 Public Review:</label>
+          <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 3px;">💬 Public Review:</label>
           <textarea id="modal-review" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.review || "")}</textarea>
           
           <button onclick="window.savePubTexts('${pubId}')" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Save Note & Review</button>
         </div>
         
         <div style="margin-bottom: 20px;">
-          <strong style="font-size: 13px; color: #333;">History (${visitsCount}):</strong>
-          <ul style="padding-left: 20px; margin-top: 8px; font-size: 13px; color: #555; max-height: 80px; overflow-y: auto; text-align: left;">${historyHtml}</ul>
+          <strong style="font-size: 13px; color: var(--text-secondary);">History (${visitsCount}):</strong>
+          <ul style="padding-left: 20px; margin-top: 8px; font-size: 13px; color: var(--text-secondary); max-height: 80px; overflow-y: auto; text-align: left;">${historyHtml}</ul>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -504,10 +504,10 @@ export function openPubDetails(pubId) {
         ${(state.isAdmin || state.isSuperadmin) ? `
           <div style="margin-top: 25px; padding-top: 15px; border-top: 2px dashed #e74c3c; text-align: left;">
             <strong style="font-size: 12px; color: #e74c3c;">🛠️ Admin Tools (Pub Data)</strong>
-            <label style="font-size: 10px; color: #333; display: block; margin-top: 8px;">Address:</label>
+            <label style="font-size: 10px; color: var(--text-secondary); display: block; margin-top: 8px;">Address:</label>
             <input type="text" id="admin-address" value="${escapeHTML(pub.address || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px;">
             
-            <label style="font-size: 10px; color: #333; display: block;">Image URL:</label>
+            <label style="font-size: 10px; color: var(--text-secondary); display: block;">Image URL:</label>
             <input type="text" id="admin-image" value="${escapeHTML(pub.image_url || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px;">
             
             <button onclick="window.saveAdminPubInfo('${pubId}')" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Zapisz dane globalne pubu</button>
