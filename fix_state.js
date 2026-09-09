@@ -1,4 +1,5 @@
-export const state = {
+const fs = require('fs');
+let js = `export const state = {
   map: null,
   markers: [],
   checkins: {},
@@ -16,4 +17,5 @@ export const state = {
   lastNicknameChange: null,
   lastFriendCodeChange: null,
   userLocationMarker: null
-};
+};`;
+fs.writeFileSync('state.js', js);
