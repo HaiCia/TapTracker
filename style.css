@@ -79,6 +79,51 @@ html {
   height: 100%;
 }
 
+.map-section {
+  position: relative;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.map-legend div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+}
+.legend-pin {
+  width: 20px;
+  height: 20px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 9px;
+  border: 1px solid #fff;
+}
+.legend-pin i {
+  transform: rotate(45deg);
+}
+.legend-badge {
+  font-size: 14px;
+}
+
 .info-panel {
   display: flex;
   flex-direction: column;
@@ -326,27 +371,29 @@ html {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: calc(25% - 12px);
+  right: 25%;
+  margin-right: -15px; /* Overlap the border slightly */
   z-index: 1005;
   background: #fff;
   color: #444;
   border: 1px solid #ccc;
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  box-shadow: -3px 0 8px rgba(0, 0, 0, 0.06);
-  width: 24px;
-  height: 50px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-weight: 900;
   font-size: 11px;
-  transition: right 0.3s ease;
+  font-weight: 900;
+  user-select: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .content-area.sidebar-hidden .sidebar-toggle {
   right: 0;
+  margin-right: 10px;
 }
 
 .sidebar-toggle:hover {
@@ -522,19 +569,21 @@ html {
   
   .sidebar-toggle {
     top: auto;
-    bottom: calc(33.33% - 12px);
-    right: 50%;
-    transform: translateX(50%) rotate(90deg);
-    border-radius: 8px 8px 0 0;
-    width: 40px;
-    height: 24px;
-    border-bottom: none;
-    box-shadow: 0 -3px 8px rgba(0,0,0,0.1);
+    bottom: calc(33.33% - 16px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    border-radius: 20px;
+    padding: 6px 16px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+    z-index: 1010;
   }
   
   .content-area.sidebar-hidden .sidebar-toggle {
-    bottom: 0;
-    transform: translateX(50%) rotate(90deg);
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-right: 0;
   }
   
   .content-area.list-only-mode .sidebar-toggle {
