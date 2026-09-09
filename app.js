@@ -128,6 +128,7 @@ window.checkIn = checkIn;
 window.checkOut = checkOut;
 window.sendChatMessage = sendChatMessage;
 window.loadChatMessages = loadChatMessages;
+window.toggleSidebarChat = toggleSidebarChat;
 
 // Setup Realtime
 function setupRealtime() {
@@ -153,7 +154,7 @@ function setupRealtime() {
     const pubId = newMsg.pub_id;
     if (!state.pubMessages[pubId]) state.pubMessages[pubId] = [];
     state.pubMessages[pubId].push(newMsg);
-    if (state.currentPubId === pubId) {
+    if (String(state.currentPubId) === String(pubId)) {
       renderChatMessages(pubId);
     }
   });

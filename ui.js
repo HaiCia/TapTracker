@@ -133,13 +133,24 @@ export function updateSidebarList() {
                 <button class="pub-status-btn status-unvisited" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
                     ${isVisited ? "+ ADD AGAIN" : "+ ADD VISIT"}
                 </button>
+                ${state.checkins && state.checkins[pubId] > 0 ? `<div style="margin-top:4px; font-size:10px; font-weight:bold; background:#2196f3; color:white; padding:4px 6px; border-radius:12px; text-align:center;">👥 ${state.checkins[pubId]} tu jest</div>` : ""}
+                <button onclick="event.stopPropagation(); window.toggleSidebarChat('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: none; border: 1px solid #2196f3; color: #2196f3; width: 100%; cursor: pointer; margin-top: 4px;">💬 CZAT</button>
                 <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-secondary); width: 100%; cursor: pointer;">
                     📖 VIEW
                 </button>
                 ${state.isListOnly ? `<button onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100);" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #2196f3; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">🗺️ SEE ON MAP</button>` : ''}
             </div>
         </div>
-      `;
+      
+        <div id="sidebar-chat-container-${pubId}" style="display:none; padding: 10px; background: var(--bg-app); border-bottom: 1px solid var(--border-light); cursor: default;" onclick="event.stopPropagation()">
+          <div id="sidebar-chat-messages-${pubId}" style="height: 120px; overflow-y: auto; padding: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 6px;">
+            <div style="color: var(--text-secondary); text-align: center; margin: auto;">Loading messages...</div>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <input type="text" id="sidebar-chat-input-${pubId}" placeholder="Type message..." style="flex: 1; border: 1px solid var(--border-color); border-radius: 4px; padding: 6px; font-size: 11px; background: var(--bg-primary); color: var(--text-primary); outline: none;" onkeypress="if(event.key === 'Enter') window.sendChatMessage('${pubId}')">
+            <button onclick="window.sendChatMessage('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 0 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">Wyślij</button>
+          </div>
+        </div>`;
     }
   });
 
@@ -437,7 +448,7 @@ export function openPubDetails(pubId) {
   const existingModal = document.getElementById('pub-modal-overlay');
   if (existingModal) existingModal.remove();
   state.currentPubId = pubId;
-  const pub = state.markers.find((m) => m.pubData.id === pubId).pubData;
+  const pub = state.markers.find((m) => String(m.pubData.id) === String(pubId)).pubData;
   const isVisited = pub.visited;
 
   const currentRating = pub.rating || 0;
@@ -516,19 +527,6 @@ export function openPubDetails(pubId) {
         <div style="margin-bottom: 20px;">
           <strong style="font-size: 13px; color: var(--text-secondary);">History (${visitsCount}):</strong>
           <ul style="padding-left: 20px; margin-top: 8px; font-size: 13px; color: var(--text-secondary); max-height: 80px; overflow-y: auto; text-align: left;">${historyHtml}</ul>
-        </div>
-
-        <div style="margin-bottom: 20px; text-align: left; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; background: var(--bg-app);">
-          <div style="background: var(--bg-primary); padding: 8px 12px; font-weight: bold; font-size: 13px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-            <span>💬 Pub Chat</span>
-          </div>
-          <div id="chat-messages-${pubId}" style="height: 150px; overflow-y: auto; padding: 10px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="color: var(--text-secondary); text-align: center; margin: auto;">Loading messages...</div>
-          </div>
-          <div style="display: flex; border-top: 1px solid var(--border-color);">
-            <input type="text" id="chat-input-${pubId}" placeholder="Type a message..." style="flex: 1; border: none; padding: 8px 12px; font-size: 12px; background: transparent; color: var(--text-primary); outline: none;" onkeypress="if(event.key === 'Enter') window.sendChatMessage('${pubId}')">
-            <button onclick="window.sendChatMessage('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 0 15px; font-weight: bold; cursor: pointer;">Send</button>
-          </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -702,7 +700,7 @@ export async function checkOut() {
 }
 
 export async function sendChatMessage(pubId) {
-  const input = document.getElementById('chat-input-' + pubId);
+  const input = document.getElementById('sidebar-chat-input-' + pubId);
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
   input.value = '';
@@ -715,7 +713,7 @@ export async function sendChatMessage(pubId) {
 }
 
 export async function loadChatMessages(pubId) {
-  const container = document.getElementById('chat-messages-' + pubId);
+  const container = document.getElementById('sidebar-chat-messages-' + pubId);
   if (!container) return;
   const { data } = await supabaseClient.from('pub_messages').select('*').eq('pub_id', pubId).order('created_at', { ascending: true });
   if (data) {
@@ -725,7 +723,7 @@ export async function loadChatMessages(pubId) {
 }
 
 export function renderChatMessages(pubId) {
-  const container = document.getElementById('chat-messages-' + pubId);
+  const container = document.getElementById('sidebar-chat-messages-' + pubId);
   if (!container) return;
   const msgs = state.pubMessages[pubId] || [];
   if (msgs.length === 0) {
@@ -740,4 +738,15 @@ export function renderChatMessages(pubId) {
     </div>
   `).join('');
   container.scrollTop = container.scrollHeight;
+}
+
+export function toggleSidebarChat(pubId) {
+  const container = document.getElementById('sidebar-chat-container-' + pubId);
+  if (!container) return;
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    window.loadChatMessages(pubId);
+  } else {
+    container.style.display = 'none';
+  }
 }
