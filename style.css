@@ -600,7 +600,7 @@ body.dark-mode .filter-btn:hover {
     right: 0;
     top: 0;
     bottom: 0;
-    width: 320px;
+    width: 50%;
     min-width: 300px;
     z-index: 1005;
     box-shadow: -4px 0 15px rgba(0, 0, 0, 0.2);
@@ -610,7 +610,7 @@ body.dark-mode .filter-btn:hover {
     display: none;
   }
   .sidebar-toggle {
-    right: 320px;
+    right: 50%;
     margin-right: -15px;
   }
   .content-area.sidebar-hidden .sidebar-toggle {
