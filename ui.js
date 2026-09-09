@@ -78,7 +78,7 @@ export function updateSidebarList() {
         : "";
 
       let imgHtml = marker.pubData.image_url
-        ? `<img src="${escapeHTML(marker.pubData.image_url)}" style="width: 75px; height: 75px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`
+        ? `<img src="${escapeHTML(marker.pubData.image_url)}" loading="lazy" style="width: 75px; height: 75px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`
         : `<div style="width: 75px; height: 75px; background: #f0f2f5; border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#ccc; font-size: 24px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
 
       let noteHtml = marker.pubData.note
@@ -126,13 +126,15 @@ export function updateSidebarList() {
                 ${noteHtml}
                 ${reviewHtml}
             </div>
-            
-            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px; min-width: 80px;">
+            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; min-width: 90px;">
                 <span style="font-size: 10px; font-weight: 900; color: ${isVisited ? '#27ae60' : '#7f8c8d'}; text-transform: uppercase;">
                     ${isVisited ? "✔️ VISITED" : "❌ TO VISIT"}
                 </span>
-                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 14px; font-size: 11px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    ${isVisited ? "VIEW" : "+ MARK"}
+                <button class="pub-status-btn ${isVisited ? "status-visited" : "status-unvisited"}" onclick="event.stopPropagation(); window.toggleVisitState('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
+                    ${isVisited ? "UNMARK" : "+ ADD VISIT"}
+                </button>
+                <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #f0f2f5; border: 1px solid #ddd; color: #444; width: 100%; cursor: pointer;">
+                    📖 VIEW
                 </button>
             </div>
         </div>

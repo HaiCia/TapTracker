@@ -48,7 +48,6 @@ async function startApp() {
 
   if (state.isSidebarHidden) {
     document.querySelector(".content-area").classList.add("sidebar-hidden");
-    document.getElementById("sidebar-toggle-btn").innerText = "◀";
   }
 
   setupUserProfile();
