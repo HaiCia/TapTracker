@@ -504,3 +504,35 @@ html {
   background-color: #e8f4fd; /* Jasnoniebieskie tło */
   border-left: 4px solid #2196f3; /* Niebieski pasek z boku */
 }
+
+/* --- WERSJA MOBILNA --- */
+@media (max-width: 768px) {
+  .content-area {
+    grid-template-columns: 1fr;
+    grid-template-rows: 2fr 1fr;
+  }
+  .content-area.sidebar-hidden {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 0px;
+  }
+  .content-area.list-only-mode {
+    grid-template-columns: 1fr;
+    grid-template-rows: 0px 1fr;
+  }
+  .sidebar-toggle {
+    display: none !important;
+  }
+  .filters-container {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+  }
+  .filter-btn {
+    flex: 0 0 auto;
+  }
+  .header-top {
+    flex-wrap: wrap;
+    padding: 8px;
+    gap: 8px;
+  }
+}

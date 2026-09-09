@@ -46,6 +46,11 @@ async function startApp() {
   
   state.currentUser = session.user;
 
+  if (state.isSidebarHidden) {
+    document.querySelector(".content-area").classList.add("sidebar-hidden");
+    document.getElementById("sidebar-toggle-btn").innerText = "◀";
+  }
+
   setupUserProfile();
   initMap();
 }
