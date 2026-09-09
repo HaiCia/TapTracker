@@ -397,8 +397,6 @@ body.dark-mode .filter-btn:hover {
   font-weight: 900;
   color: var(--text-primary);
 }
-  font-size: 11px;
-}
 
 /* --- PRZYCISK ZWIJANIA PANELU (DZIUBEK) --- */
 .sidebar-toggle {
