@@ -78,8 +78,8 @@ export function updateSidebarList() {
         : "";
 
       let imgHtml = marker.pubData.image_url
-        ? `<img onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" src="${escapeHTML(marker.pubData.image_url)}" loading="lazy" style="cursor:pointer; width: 75px; height: 75px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`
-        : `<div onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" style="cursor:pointer; width: 75px; height: 75px; background: var(--bg-app); border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#ccc; font-size: 24px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
+        ? `<img onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" src="${escapeHTML(marker.pubData.image_url)}" loading="lazy" style="cursor:pointer; width: ${state.isListOnly ? '110px' : '75px'}; height: ${state.isListOnly ? '110px' : '75px'}; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`
+        : `<div onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" style="cursor:pointer; width: ${state.isListOnly ? '110px' : '75px'}; height: ${state.isListOnly ? '110px' : '75px'}; background: var(--bg-app); border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#ccc; font-size: 24px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
 
       let noteHtml = marker.pubData.note
         ? `<div style="font-size: 11px; color: var(--text-primary); margin-top: 6px; background: rgba(243, 156, 18, 0.15); padding: 4px 6px; border-radius: 4px; border-left: 3px solid #f39c12; font-weight: 500;">🔒 ${escapeHTML(marker.pubData.note)}</div>`
@@ -136,6 +136,7 @@ export function updateSidebarList() {
                 <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-secondary); width: 100%; cursor: pointer;">
                     📖 VIEW
                 </button>
+                ${state.isListOnly ? `<button onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100);" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #2196f3; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">🗺️ SEE ON MAP</button>` : ''}
             </div>
         </div>
       `;
@@ -143,7 +144,21 @@ export function updateSidebarList() {
   });
 
   const pubInfoEl = document.getElementById("pub-info");
-  if (pubInfoEl) pubInfoEl.innerText = `VISIBLE: ${visibleCount}`;
+  if (pubInfoEl) {
+    const totalFiltered = state.markers.filter(m => m.matchesFilters).length;
+    const visitedFiltered = state.markers.filter(m => m.matchesFilters && m.pubData.visited).length;
+    const pct = totalFiltered > 0 ? Math.round((visitedFiltered / totalFiltered) * 100) : 0;
+    if (state.isListOnly) {
+      pubInfoEl.innerHTML = `<div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:12px;">
+        <span>📍 ${visibleCount} visible</span>
+        <span style="color:#2ecc71;">✔️ ${visitedFiltered} visited</span>
+        <span>➕ ${totalFiltered - visitedFiltered} to visit</span>
+        <span style="color:#f39c12; font-weight:900;">${pct}% done</span>
+      </div>`;
+    } else {
+      pubInfoEl.innerText = `VISIBLE: ${visibleCount}`;
+    }
+  }
 
   const pubListContainerEl = document.getElementById("pub-list-container");
   if (pubListContainerEl) {
