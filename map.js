@@ -76,6 +76,13 @@ export function initMap() {
     console.log("Geolocation access denied or failed.");
   });
 
+  state.map.on("click", function () {
+    const dropdown = document.getElementById("user-dropdown");
+    if (dropdown && !dropdown.classList.contains("hidden")) {
+      dropdown.classList.add("hidden");
+    }
+  });
+
   state.map.on("moveend", updateSidebarList);
 
   loadPubs();
@@ -97,12 +104,14 @@ export async function loadPubs() {
     const sums = {};
     const counts = {};
     const reviewsCounts = {};
+    const reviewsList = {};
 
     allCommunityData.forEach((v) => {
       if (!sums[v.pub_id]) {
         sums[v.pub_id] = 0;
         counts[v.pub_id] = 0;
         reviewsCounts[v.pub_id] = 0;
+        reviewsList[v.pub_id] = [];
       }
 
       if (v.rating > 0) {
@@ -112,6 +121,7 @@ export async function loadPubs() {
 
       if (v.review && v.review.trim().length > 0) {
         reviewsCounts[v.pub_id]++;
+        reviewsList[v.pub_id].push(v.review.trim());
       }
     });
 
@@ -120,6 +130,7 @@ export async function loadPubs() {
         avg: counts[id] > 0 ? (sums[id] / counts[id]).toFixed(1) : 0,
         count: counts[id],
         reviewsCount: reviewsCounts[id],
+        reviewsList: reviewsList[id]
       };
     });
   }

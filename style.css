@@ -109,7 +109,8 @@ html {
   position: absolute;
   bottom: 10px;
   left: 10px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-primary);
+  opacity: 0.95;
   padding: 8px 12px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -242,7 +243,7 @@ body.dark-mode .filter-btn:hover {
 .login-btn {
   background: var(--bg-primary);
   color: var(--text-secondary);
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-weight: 900;
   text-transform: uppercase;
@@ -277,12 +278,13 @@ body.dark-mode .filter-btn:hover {
 .login-input {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-weight: bold;
   font-size: 13px;
   outline: none;
-  background: #f7f7f7;
+  background: var(--bg-app);
+  color: var(--text-primary);
 }
 
 /* --- MENU UŻYTKOWNIKA (DROPDOWN) --- */
@@ -312,7 +314,7 @@ body.dark-mode .filter-btn:hover {
 .friend-code-section {
   padding: 10px;
   font-size: 12px;
-  background: #fafafa;
+  background: var(--bg-app);
   border-bottom: 1px solid var(--border-light);
   text-align: center;
 }
@@ -349,7 +351,7 @@ body.dark-mode .filter-btn:hover {
 }
 
 .dropdown-item:hover {
-  background: #f0f0f0;
+  background: var(--bg-hover);
 }
 
 .dropdown-item.logout-btn,
@@ -408,7 +410,7 @@ body.dark-mode .filter-btn:hover {
   z-index: 1005;
   background: var(--bg-primary);
   color: var(--text-secondary);
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   padding: 6px 12px;

@@ -471,7 +471,19 @@ export function openPubDetails(pubId) {
         </div>
         
         <div style="margin-bottom: 15px; text-align: left;">
-          <label style="font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">🔒 Private Note:</label>
+          
+        ${(comm && comm.reviewsList && comm.reviewsList.length > 0) ? `
+        <div style="margin-bottom: 15px;">
+          <button onclick="document.getElementById('community-reviews-${pubId}').style.display='block'; this.style.display='none';" style="background:none; border:none; color:#2196f3; font-weight:bold; cursor:pointer; font-size:12px; text-decoration:underline;">
+            👀 View Community Reviews (${comm.reviewsList.length})
+          </button>
+          <div id="community-reviews-${pubId}" style="display:none; text-align:left; background:var(--bg-app); padding: 10px; border-radius: 6px; font-size: 11px; color: var(--text-secondary); max-height: 100px; overflow-y:auto; margin-top:8px;">
+            ${comm.reviewsList.map(r => `<div style="margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid var(--border-color);">"${escapeHTML(r)}"</div>`).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+          <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 3px;">🔒 Private Note:</label>
           <textarea id="modal-note" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.note || "")}</textarea>
 
           <label style="font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">💬 Public Review:</label>
@@ -599,4 +611,35 @@ export async function handleAddVisit(pubId) {
 
   applyFilters();
   openPubDetails(pubId);
+}
+
+
+export async function removeSingleVisit(pubId, index) {
+  const marker = state.markers.find((m) => String(m.pubData.id) === String(pubId));
+  if (!marker) return;
+
+  let history = marker.pubData.visit_history || [];
+  if (history.length <= 1) {
+    if (confirm("This is your last visit. Delete it completely?")) {
+      await toggleVisitState(pubId);
+      const modal = document.getElementById('pub-modal-overlay');
+      if (modal) modal.remove();
+    }
+    return;
+  }
+
+  history.splice(index, 1);
+  const { error } = await supabaseClient.from("visits").update({
+    visit_history: history,
+    visit_date: history[history.length - 1]
+  }).eq("user_id", state.currentUser.id).eq("pub_id", pubId);
+
+  if (!error) {
+    marker.pubData.visit_history = history;
+    marker.pubData.visit_date = history[history.length - 1];
+    const modal = document.getElementById('pub-modal-overlay');
+    if (modal) modal.remove();
+    openPubDetails(pubId);
+    updateSidebarList();
+  }
 }

@@ -88,6 +88,7 @@ window.openPubDetails = openPubDetails;
 window.savePubTexts = savePubTexts;
 window.handleAddVisit = handleAddVisit;
 window.saveAdminPubInfo = saveAdminPubInfo;
+window.removeSingleVisit = removeSingleVisit;
 
 window.toggleDarkMode = function() {
   document.body.classList.toggle("dark-mode");
