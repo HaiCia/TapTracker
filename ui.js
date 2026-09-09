@@ -434,36 +434,29 @@ export async function toggleFavorite(pubId) {
 }
 
 export function openPubDetails(pubId) {
-  const marker = state.markers.find((m) => String(m.pubData.id) === String(pubId));
-  if (!marker) return;
-
-  const pub = marker.pubData;
-  const currentRating = pub.rating || 0;
-  const comm = pub.community;
+  const existingModal = document.getElementById('pub-modal-overlay');\n  if (existingModal) existingModal.remove();\n  state.currentPubId = pubId;
+  const pub = state.markers.find((m) => m.pubData.id === pubId).pubData;
   const isVisited = pub.visited;
 
-  const communityText = comm && comm.count > 0
-    ? `Community: <strong style="color: #ffd700;">${comm.avg} ★</strong> <span style="font-size: 9px;">(${comm.count} total)</span>`
-    : `No community ratings yet`;
-
-  const oldModal = document.getElementById("pub-modal-overlay");
-  if (oldModal) oldModal.remove();
-
-  const imgHtml = pub.image_url
-    ? `<img src="${escapeHTML(pub.image_url)}" style="width: 100%; height: 130px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
-    : "";
-  const addressHtml = pub.address
-    ? `<div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">📍 ${escapeHTML(pub.address)}</div>`
-    : "";
-
+  const currentRating = pub.rating || 0;
+  let visitsCount = pub.visit_history ? pub.visit_history.length : (isVisited && pub.visit_date ? 1 : 0);
+  
   let historyHtml = pub.visit_history && pub.visit_history.length > 0
     ? pub.visit_history.map((d, index) => `<li style="margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">${escapeHTML(d)} ${state.currentUser ? `<button onclick="window.removeSingleVisit('${pubId}', ${index})" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px;">✖</button>` : ""}</li>`).join("")
     : isVisited && pub.visit_date
       ? `<li style="margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">${escapeHTML(pub.visit_date)} ${state.currentUser ? `<button onclick="if(confirm('Delete visit?')) window.toggleVisitState('${pubId}')" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px;">✖</button>` : ""}</li>`
       : `<li style="color: #999; font-style: italic;">No visits yet</li>`;
 
-  const visitsCount = pub.visit_history ? pub.visit_history.length : isVisited ? 1 : 0;
-  
+  let addressHtml = pub.address ? `<p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 10px 0;">${escapeHTML(pub.address)}</p>` : "";
+  let imgHtml = pub.image_url
+        ? `<img onclick="event.stopPropagation(); window.flyToPub(${pub.lat}, ${pub.lng}); window.openPubDetails('${pubId}')" src="${escapeHTML(pub.image_url)}" loading="lazy" style="cursor:pointer; width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">`
+        : `<div style="width: 100%; height: 120px; background: var(--bg-app); border-radius: 8px; margin-bottom: 15px; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size: 32px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
+
+  const comm = pub.community;
+  let communityText = "No community ratings yet";
+  if (comm && comm.count > 0) {
+    communityText = `<strong>${comm.avg}</strong> ⭐ (${comm.count} ratings)`;
+  }
 
   const modalHtml = `
     <div id="pub-modal-overlay" onclick="if(event.target === this) document.getElementById('pub-modal-overlay').remove()" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
@@ -475,9 +468,20 @@ export function openPubDetails(pubId) {
         ${addressHtml}
         ${imgHtml}
         
-        <button id="favorite-btn" onclick="window.toggleFavorite('${pubId}')" style="background: none; border: 1px solid ${pub.is_favorite ? "#e74c3c" : "#ccc"}; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: 15px; color: ${pub.is_favorite ? "#e74c3c" : "#777"};">
+        <button id="favorite-btn" onclick="window.toggleFavorite('${pubId}')" style="background: none; border: 1px solid ${pub.is_favorite ? "#e74c3c" : "#ccc"}; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: 15px; color: ${pub.is_favorite ? "#e74c3c" : "var(--text-secondary)"};">
           ${pub.is_favorite ? "❤️ Favorited" : "🤍 Mark as Favorite"}
         </button>
+
+        <div id="checkin-container" style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 15px; text-align: center;">
+          <div id="checkin-status" style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--text-primary);">
+            ${state.myCheckin && state.myCheckin.pub_id === pubId 
+              ? '✅ You are checked in here' 
+              : (state.checkins && state.checkins[pubId] ? `👥 ${state.checkins[pubId]} people here` : "No one is here right now")}
+          </div>
+          ${state.myCheckin && state.myCheckin.pub_id === pubId
+            ? `<button onclick="window.checkOut()" style="background: #e74c3c; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;">CHECK OUT</button>`
+            : `<button onclick="window.checkIn('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;">📍 CHECK IN</button>`}
+        </div>
 
         <div style="background: var(--bg-app); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
           <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">Your rating:</span><br>
@@ -512,27 +516,41 @@ export function openPubDetails(pubId) {
           <ul style="padding-left: 20px; margin-top: 8px; font-size: 13px; color: var(--text-secondary); max-height: 80px; overflow-y: auto; text-align: left;">${historyHtml}</ul>
         </div>
 
+        <div style="margin-bottom: 20px; text-align: left; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; background: var(--bg-app);">
+          <div style="background: var(--bg-primary); padding: 8px 12px; font-weight: bold; font-size: 13px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <span>💬 Pub Chat</span>
+          </div>
+          <div id="chat-messages-${pubId}" style="height: 150px; overflow-y: auto; padding: 10px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="color: var(--text-secondary); text-align: center; margin: auto;">Loading messages...</div>
+          </div>
+          <div style="display: flex; border-top: 1px solid var(--border-color);">
+            <input type="text" id="chat-input-${pubId}" placeholder="Type a message..." style="flex: 1; border: none; padding: 8px 12px; font-size: 12px; background: transparent; color: var(--text-primary); outline: none;" onkeypress="if(event.key === 'Enter') window.sendChatMessage('${pubId}')">
+            <button onclick="window.sendChatMessage('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 0 15px; font-weight: bold; cursor: pointer;">Send</button>
+          </div>
+        </div>
+
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${!isVisited ? `<button onclick="window.handleAddVisit('${pubId}')" style="background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; width: 100%;">+ ADD VISIT</button>` : `<button onclick="if(confirm('Delete ALL visits?')) { window.toggleVisitState('${pubId}'); document.getElementById('pub-modal-overlay').remove(); }" style="background: var(--bg-primary); color: #e74c3c; border: 1px solid #e74c3c; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px;">❌ UNMARK (Delete Visits)</button>`}
+          ${!isVisited ? `<button onclick="window.handleAddVisit('${pubId}')" style="background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; width: 100%;">+ ADD VISIT</button>` : `<button onclick="if(confirm('Delete ALL visits?')) { window.toggleVisitState('${pubId}'); document.getElementById('pub-modal-overlay').remove(); }" style="background: var(--bg-primary); color: #e74c3c; border: 1px solid var(--border-color); padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px;">❌ UNMARK (Delete Visits)</button>`}
         </div>
 
         ${(state.isAdmin || state.isSuperadmin) ? `
-          <div style="margin-top: 25px; padding-top: 15px; border-top: 2px dashed #e74c3c; text-align: left;">
-            <strong style="font-size: 12px; color: #e74c3c;">🛠️ Admin Tools (Pub Data)</strong>
-            <label style="font-size: 10px; color: var(--text-secondary); display: block; margin-top: 8px;">Address:</label>
-            <input type="text" id="admin-address" value="${escapeHTML(pub.address || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); border-radius: 3px;">
+          <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <strong style="font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 8px; text-align:left;">Admin Pub Info:</strong>
+            <label style="font-size:11px; text-align:left; display:block; color:var(--text-secondary);">Address:</label>
+            <input type="text" id="admin-pub-address" value="${escapeHTML(pub.address || "")}" style="width:100%; font-size:12px; padding:6px; margin-bottom:8px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; box-sizing:border-box;">
             
-            <label style="font-size: 10px; color: var(--text-secondary); display: block;">Image URL:</label>
-            <input type="text" id="admin-image" value="${escapeHTML(pub.image_url || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); border-radius: 3px;">
+            <label style="font-size:11px; text-align:left; display:block; color:var(--text-secondary);">Image URL:</label>
+            <input type="text" id="admin-pub-image" value="${escapeHTML(pub.image_url || "")}" style="width:100%; font-size:12px; padding:6px; margin-bottom:8px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; box-sizing:border-box;">
             
-            <button onclick="window.saveAdminPubInfo('${pubId}')" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Zapisz dane globalne pubu</button>
+            <button onclick="window.saveAdminPubInfo('${pubId}')" style="background:#34495e; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; width:100%; font-weight:bold;">Save Admin Info</button>
           </div>
-        ` : ""}
+        ` : ''}
       </div>
     </div>
   `;
 
   document.body.insertAdjacentHTML("beforeend", modalHtml);
+  window.loadChatMessages(pubId);
 }
 
 export async function savePubTexts(pubId) {
@@ -656,4 +674,68 @@ export async function removeSingleVisit(pubId, index) {
     openPubDetails(pubId);
     updateSidebarList();
   }
+}
+
+
+export async function checkIn(pubId) {
+  const { data, error } = await supabaseClient.from('checkins').upsert({
+    user_id: state.currentUser.id,
+    pub_id: pubId,
+    nickname: state.profile ? state.profile.nickname : 'Anonymous',
+    checked_in_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString()
+  }).select();
+  if (!error && data) {
+    state.myCheckin = data[0];
+    openPubDetails(pubId);
+  }
+}
+
+export async function checkOut() {
+  if (!state.myCheckin) return;
+  const pubId = state.myCheckin.pub_id;
+  await supabaseClient.from('checkins').delete().eq('id', state.myCheckin.id);
+  state.myCheckin = null;
+  openPubDetails(pubId);
+}
+
+export async function sendChatMessage(pubId) {
+  const input = document.getElementById('chat-input-' + pubId);
+  if (!input || !input.value.trim()) return;
+  const text = input.value.trim();
+  input.value = '';
+  await supabaseClient.from('pub_messages').insert({
+    user_id: state.currentUser.id,
+    pub_id: pubId,
+    nickname: state.profile ? state.profile.nickname : 'Anonymous',
+    message: text
+  });
+}
+
+export async function loadChatMessages(pubId) {
+  const container = document.getElementById('chat-messages-' + pubId);
+  if (!container) return;
+  const { data } = await supabaseClient.from('pub_messages').select('*').eq('pub_id', pubId).order('created_at', { ascending: true });
+  if (data) {
+    state.pubMessages[pubId] = data;
+    renderChatMessages(pubId);
+  }
+}
+
+export function renderChatMessages(pubId) {
+  const container = document.getElementById('chat-messages-' + pubId);
+  if (!container) return;
+  const msgs = state.pubMessages[pubId] || [];
+  if (msgs.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; margin: auto;">No messages yet. Say hi!</div>';
+    return;
+  }
+  container.innerHTML = msgs.map(m => `
+    <div style="margin-bottom: 4px; line-height: 1.3;">
+      <span style="font-weight: bold; color: ${m.user_id === state.currentUser.id ? '#2ecc71' : 'var(--text-primary)'};">${escapeHTML(m.nickname)}</span>
+      <span style="color: var(--text-secondary); font-size: 10px; margin-left: 4px;">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span><br>
+      <span style="color: var(--text-primary);">${escapeHTML(m.message)}</span>
+    </div>
+  `).join('');
+  container.scrollTop = container.scrollHeight;
 }

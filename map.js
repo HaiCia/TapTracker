@@ -90,6 +90,15 @@ export function initMap() {
 
 export async function loadPubs() {
   const { data: pubs } = await supabaseClient.from("pubs").select("*");
+  const { data: activeCheckins } = await supabaseClient.from("checkins").select("*").gt("expires_at", new Date().toISOString());
+
+  state.checkins = {};
+  if (activeCheckins) {
+    activeCheckins.forEach(c => {
+      if (!state.checkins[c.pub_id]) state.checkins[c.pub_id] = 0;
+      state.checkins[c.pub_id]++;
+    });
+  }
   const { data: visits } = await supabaseClient
     .from("visits")
     .select("*")
