@@ -82,7 +82,7 @@ async function runSync() {
           name: name,
           lat: lat,
           lng: lng,
-          address: "Dane pobrane automatycznie z OSM"
+          image_url: "https://www.jdwetherspoon.com/~/media/Images/Jdw/icons/jdw-logo-red.png"
         });
       }
     });
