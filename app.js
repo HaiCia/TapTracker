@@ -130,6 +130,7 @@ window.checkOut = checkOut;
 window.sendChatMessage = sendChatMessage;
 window.loadChatMessages = loadChatMessages;
 window.toggleSidebarChat = toggleSidebarChat;
+window.updateSidebarList = updateSidebarList;
 
 // Setup Realtime
 function setupRealtime() {
@@ -158,6 +159,7 @@ function setupRealtime() {
     if (String(state.currentPubId) === String(pubId)) {
       renderChatMessages(pubId);
     }
+    window.updateSidebarList();
   });
 
   channel.subscribe();

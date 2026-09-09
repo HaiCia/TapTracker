@@ -130,30 +130,15 @@ export function updateSidebarList() {
                 <span style="font-size: 10px; font-weight: 900; color: ${isVisited ? '#27ae60' : '#7f8c8d'}; text-transform: uppercase;">
                     ${isVisited ? "✔️ VISITED" : "➕ TO VISIT"}
                 </span>
-                <button class="pub-status-btn status-unvisited" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
-                    ${isVisited ? "+ ADD AGAIN" : "+ ADD VISIT"}
-                </button>
                 ${state.checkins && state.checkins[pubId] > 0 ? `<div style="margin-top:4px; font-size:10px; font-weight:bold; background:#2196f3; color:white; padding:4px 6px; border-radius:12px; text-align:center;">👥 ${state.checkins[pubId]} checked in</div>` : ""}
-                ${state.myCheckin && state.myCheckin.pub_id === pubId
-                  ? `<button onclick="event.stopPropagation(); window.checkOut()" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #e74c3c; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">CHECK OUT</button>`
-                  : `<button onclick="event.stopPropagation(); window.checkIn('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #2196f3; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">📍 CHECK IN</button>`}
-                <button onclick="event.stopPropagation(); window.toggleSidebarChat('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: none; border: 1px solid #2196f3; color: #2196f3; width: 100%; cursor: pointer; margin-top: 4px;">💬 CZAT</button>
+                ${state.pubMessages && state.pubMessages[pubId] && state.pubMessages[pubId].length > 0 ? `<div style="margin-top:4px; font-size:10px; font-weight:bold; background:#e74c3c; color:white; padding:4px 6px; border-radius:12px; text-align:center;">💬 ${state.pubMessages[pubId].length} msgs</div>` : ""}
                 <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-secondary); width: 100%; cursor: pointer;">
                     📖 VIEW
                 </button>
                 ${state.isListOnly ? `<button onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100);" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #2196f3; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">🗺️ SEE ON MAP</button>` : ''}
             </div>
         </div>
-      
-        <div id="sidebar-chat-container-${pubId}" style="display:none; padding: 10px; background: var(--bg-app); border-bottom: 1px solid var(--border-light); cursor: default;" onclick="event.stopPropagation()">
-          <div id="sidebar-chat-messages-${pubId}" style="height: 120px; overflow-y: auto; padding: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 6px;">
-            <div style="color: var(--text-secondary); text-align: center; margin: auto;">Loading messages...</div>
-          </div>
-          <div style="display: flex; gap: 4px;">
-            <input type="text" id="sidebar-chat-input-${pubId}" placeholder="Type message..." style="flex: 1; border: 1px solid var(--border-color); border-radius: 4px; padding: 6px; font-size: 11px; background: var(--bg-primary); color: var(--text-primary); outline: none;" onkeypress="if(event.key === 'Enter') window.sendChatMessage('${pubId}')">
-            <button onclick="window.sendChatMessage('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 0 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">Wyślij</button>
-          </div>
-        </div>`;
+      `;
     }
   });
 
@@ -494,6 +479,32 @@ export function openPubDetails(pubId) {
           <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color);">${communityText}</div>
         </div>
         
+        
+        <div id="checkin-container" style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 15px; text-align: center;">
+          <div id="checkin-status" style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--text-primary);">
+            ${state.myCheckin && String(state.myCheckin.pub_id) === String(pubId) 
+              ? '✅ You are checked in here' 
+              : (state.checkins && state.checkins[pubId] ? `👥 ${state.checkins[pubId]} people here` : "No one is here right now")}
+          </div>
+          ${state.myCheckin && String(state.myCheckin.pub_id) === String(pubId)
+            ? `<button onclick="window.checkOut()" style="background: #e74c3c; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;">CHECK OUT</button>`
+            : `<button onclick="window.checkIn('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;">📍 CHECK IN</button>`}
+        </div>
+
+        <div id="modal-chat-container" style="background: var(--bg-app); padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: left; border: 1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-size: 12px; color: var(--text-secondary);">💬 Live Chat</strong>
+            <span style="font-size:10px; background:#e74c3c; color:white; padding:2px 6px; border-radius:10px; font-weight:bold; display:${state.pubMessages && state.pubMessages[pubId] && state.pubMessages[pubId].length > 0 ? 'block' : 'none'}">${state.pubMessages && state.pubMessages[pubId] ? state.pubMessages[pubId].length : 0} msgs</span>
+          </div>
+          <div id="sidebar-chat-messages-${pubId}" style="height: 150px; overflow-y: auto; padding: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 6px; background: var(--bg-primary);">
+            <div style="color: var(--text-secondary); text-align: center; margin: auto;">Loading messages...</div>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <input type="text" id="sidebar-chat-input-${pubId}" placeholder="Type message..." style="flex: 1; border: 1px solid var(--border-color); border-radius: 4px; padding: 6px; font-size: 11px; background: var(--bg-primary); color: var(--text-primary); outline: none;" onkeypress="if(event.key === 'Enter') window.sendChatMessage('${pubId}')">
+            <button onclick="window.sendChatMessage('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 0 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">Send</button>
+          </div>
+        </div>
+
         <div style="margin-bottom: 15px; text-align: left;">
           
         ${(comm && comm.reviewsList && comm.reviewsList.length > 0) ? `
