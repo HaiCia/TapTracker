@@ -78,8 +78,8 @@ export function updateSidebarList() {
         : "";
 
       let imgHtml = marker.pubData.image_url
-        ? `<img src="${escapeHTML(marker.pubData.image_url)}" loading="lazy" style="width: 75px; height: 75px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`
-        : `<div style="width: 75px; height: 75px; background: #f0f2f5; border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#ccc; font-size: 24px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
+        ? `<img onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" src="${escapeHTML(marker.pubData.image_url)}" loading="lazy" style="cursor:pointer; width: 75px; height: 75px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`
+        : `<div onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" style="cursor:pointer; width: 75px; height: 75px; background: var(--bg-app); border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#ccc; font-size: 24px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
 
       let noteHtml = marker.pubData.note
         ? `<div style="font-size: 11px; color: var(--text-primary); margin-top: 6px; background: rgba(243, 156, 18, 0.15); padding: 4px 6px; border-radius: 4px; border-left: 3px solid #f39c12; font-weight: 500;">🔒 ${escapeHTML(marker.pubData.note)}</div>`
@@ -128,7 +128,7 @@ export function updateSidebarList() {
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; min-width: 120px;">
                 <span style="font-size: 10px; font-weight: 900; color: ${isVisited ? '#27ae60' : '#7f8c8d'}; text-transform: uppercase;">
-                    ${isVisited ? "✔️ VISITED" : "❌ TO VISIT"}
+                    ${isVisited ? "✔️ VISITED" : "➕ TO VISIT"}
                 </span>
                 <button class="pub-status-btn status-unvisited" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
                     ${isVisited ? "+ ADD AGAIN" : "+ ADD VISIT"}
@@ -438,7 +438,7 @@ export function openPubDetails(pubId) {
     ? `<img src="${escapeHTML(pub.image_url)}" style="width: 100%; height: 130px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
     : "";
   const addressHtml = pub.address
-    ? `<div style="font-size: 12px; color: #777; margin-bottom: 15px;">📍 ${escapeHTML(pub.address)}</div>`
+    ? `<div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">📍 ${escapeHTML(pub.address)}</div>`
     : "";
 
   let historyHtml = pub.visit_history && pub.visit_history.length > 0
@@ -452,9 +452,9 @@ export function openPubDetails(pubId) {
 
   const modalHtml = `
     <div id="pub-modal-overlay" onclick="if(event.target === this) document.getElementById('pub-modal-overlay').remove()" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
-      <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 320px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; text-align: center;">
+      <div style="background: var(--bg-primary); color: var(--text-primary); padding: 20px; border-radius: 8px; width: 90%; max-width: 320px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; text-align: center;">
         
-        <button onclick="document.getElementById('pub-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; border: none; background: #eee; border-radius: 50%; width: 26px; height: 26px; font-size: 14px; cursor: pointer; z-index: 10; display:flex; align-items:center; justify-content:center;">✖</button>
+        <button onclick="document.getElementById('pub-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; border: none; background: var(--bg-app); color: var(--text-primary); border-radius: 50%; width: 26px; height: 26px; font-size: 14px; cursor: pointer; z-index: 10; display:flex; align-items:center; justify-content:center;">✖</button>
         
         <h2 style="margin: 0 0 5px 0; font-size: 20px; padding-right: 25px;">${escapeHTML(pub.name)}</h2>
         ${addressHtml}
@@ -464,10 +464,10 @@ export function openPubDetails(pubId) {
           ${pub.is_favorite ? "❤️ Favorited" : "🤍 Mark as Favorite"}
         </button>
 
-        <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+        <div style="background: var(--bg-app); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
           <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">Your rating:</span><br>
           ${getStarsHtml(pubId, currentRating)}
-          <div style="font-size: 11px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">${communityText}</div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color);">${communityText}</div>
         </div>
         
         <div style="margin-bottom: 15px; text-align: left;">
@@ -484,10 +484,10 @@ export function openPubDetails(pubId) {
         ` : ''}
 
           <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 3px;">🔒 Private Note:</label>
-          <textarea id="modal-note" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.note || "")}</textarea>
+          <textarea id="modal-note" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.note || "")}</textarea>
 
           <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 3px;">💬 Public Review:</label>
-          <textarea id="modal-review" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.review || "")}</textarea>
+          <textarea id="modal-review" style="width: 100%; height: 45px; font-size: 12px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); border-radius: 4px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;">${escapeHTML(pub.review || "")}</textarea>
           
           <button onclick="window.savePubTexts('${pubId}')" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Save Note & Review</button>
         </div>
@@ -505,10 +505,10 @@ export function openPubDetails(pubId) {
           <div style="margin-top: 25px; padding-top: 15px; border-top: 2px dashed #e74c3c; text-align: left;">
             <strong style="font-size: 12px; color: #e74c3c;">🛠️ Admin Tools (Pub Data)</strong>
             <label style="font-size: 10px; color: var(--text-secondary); display: block; margin-top: 8px;">Address:</label>
-            <input type="text" id="admin-address" value="${escapeHTML(pub.address || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px;">
+            <input type="text" id="admin-address" value="${escapeHTML(pub.address || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); border-radius: 3px;">
             
             <label style="font-size: 10px; color: var(--text-secondary); display: block;">Image URL:</label>
-            <input type="text" id="admin-image" value="${escapeHTML(pub.image_url || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px;">
+            <input type="text" id="admin-image" value="${escapeHTML(pub.image_url || "")}" style="width: 100%; padding: 5px; font-size: 11px; margin-bottom: 8px; box-sizing: border-box; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); border-radius: 3px;">
             
             <button onclick="window.saveAdminPubInfo('${pubId}')" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; font-weight: bold;">💾 Zapisz dane globalne pubu</button>
           </div>
