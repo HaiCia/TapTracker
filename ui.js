@@ -146,7 +146,19 @@ export function updateSidebarList() {
   if (pubInfoEl) pubInfoEl.innerText = `VISIBLE: ${visibleCount}`;
 
   const pubListContainerEl = document.getElementById("pub-list-container");
-  if (pubListContainerEl) pubListContainerEl.innerHTML = listHtml;
+  if (pubListContainerEl) {
+    if (visibleCount === 0) {
+      pubListContainerEl.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-secondary); text-align:center; padding: 40px 20px;">
+          <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.2;"><i class="fa-solid fa-beer-mug-empty"></i></div>
+          <div style="font-size: 16px; font-weight: 900; margin-bottom: 8px;">No pubs found!</div>
+          <div style="font-size: 12px; max-width: 200px;">Try changing the map area, your search phrase or the selected filter.</div>
+        </div>
+      `;
+    } else {
+      pubListContainerEl.innerHTML = listHtml;
+    }
+  }
 
   const sidebarBtn = document.getElementById("sidebar-toggle-btn");
   if (sidebarBtn) {
