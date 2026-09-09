@@ -365,7 +365,7 @@ body.dark-mode .filter-btn:hover {
   font-weight: 900;
   font-size: 13px;
   border-bottom: 1px solid var(--border-color);
-  background: #fafafa;
+  background: var(--bg-app);\n  color: var(--text-primary);
 }
 
 #pub-list-container {
@@ -523,7 +523,7 @@ body.dark-mode .filter-btn:hover {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #f4f6f8;
+  background: var(--bg-app);
 }
 
 .login-container {
@@ -550,7 +550,7 @@ body.dark-mode .filter-btn:hover {
 .toggle-mode-btn {
   background: none;
   border: none;
-  color: #666;
+  color: var(--text-secondary);
   text-decoration: underline;
   font-size: 11px;
   font-weight: bold;
@@ -584,7 +584,7 @@ body.dark-mode .filter-btn:hover {
 }
 /* Podświetlenie aktywnego pubu na liście */
 .pub-list-item.active-sidebar-item {
-  background-color: #e8f4fd; /* Jasnoniebieskie tło */
+  background-color: rgba(33, 150, 243, 0.15); /* Jasnoniebieskie tło */
   border-left: 4px solid #2196f3; /* Niebieski pasek z boku */
 }
 

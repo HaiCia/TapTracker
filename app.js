@@ -31,7 +31,8 @@ import {
   openPubDetails,
   savePubTexts,
   handleAddVisit,
-  saveAdminPubInfo
+  saveAdminPubInfo,
+  removeSingleVisit
 } from './ui.js';
 
 async function startApp() {
