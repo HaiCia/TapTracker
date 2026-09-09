@@ -110,7 +110,7 @@ export function updateSidebarList() {
             
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
                 <div style="font-size: 15px; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; line-height: 1.2;">
-                    ${favIcon} <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(marker.pubData.name)}</span> ${adminButtons}
+                    ${favIcon} <span style="word-break: break-word;">${escapeHTML(marker.pubData.name)}</span> ${adminButtons}
                 </div>
                 ${addressHtml}
                 
@@ -133,7 +133,10 @@ export function updateSidebarList() {
                 <button class="pub-status-btn status-unvisited" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%;">
                     ${isVisited ? "+ ADD AGAIN" : "+ ADD VISIT"}
                 </button>
-                ${state.checkins && state.checkins[pubId] > 0 ? `<div style="margin-top:4px; font-size:10px; font-weight:bold; background:#2196f3; color:white; padding:4px 6px; border-radius:12px; text-align:center;">👥 ${state.checkins[pubId]} tu jest</div>` : ""}
+                ${state.checkins && state.checkins[pubId] > 0 ? `<div style="margin-top:4px; font-size:10px; font-weight:bold; background:#2196f3; color:white; padding:4px 6px; border-radius:12px; text-align:center;">👥 ${state.checkins[pubId]} checked in</div>` : ""}
+                ${state.myCheckin && state.myCheckin.pub_id === pubId
+                  ? `<button onclick="event.stopPropagation(); window.checkOut()" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #e74c3c; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">CHECK OUT</button>`
+                  : `<button onclick="event.stopPropagation(); window.checkIn('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #2196f3; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">📍 CHECK IN</button>`}
                 <button onclick="event.stopPropagation(); window.toggleSidebarChat('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: none; border: 1px solid #2196f3; color: #2196f3; width: 100%; cursor: pointer; margin-top: 4px;">💬 CZAT</button>
                 <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-secondary); width: 100%; cursor: pointer;">
                     📖 VIEW
@@ -484,17 +487,6 @@ export function openPubDetails(pubId) {
         <button id="favorite-btn" onclick="window.toggleFavorite('${pubId}')" style="background: none; border: 1px solid ${pub.is_favorite ? "#e74c3c" : "#ccc"}; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; margin-bottom: 15px; color: ${pub.is_favorite ? "#e74c3c" : "var(--text-secondary)"};">
           ${pub.is_favorite ? "❤️ Favorited" : "🤍 Mark as Favorite"}
         </button>
-
-        <div id="checkin-container" style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 15px; text-align: center;">
-          <div id="checkin-status" style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--text-primary);">
-            ${state.myCheckin && state.myCheckin.pub_id === pubId 
-              ? '✅ You are checked in here' 
-              : (state.checkins && state.checkins[pubId] ? `👥 ${state.checkins[pubId]} people here` : "No one is here right now")}
-          </div>
-          ${state.myCheckin && state.myCheckin.pub_id === pubId
-            ? `<button onclick="window.checkOut()" style="background: #e74c3c; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;">CHECK OUT</button>`
-            : `<button onclick="window.checkIn('${pubId}')" style="background: #2196f3; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;">📍 CHECK IN</button>`}
-        </div>
 
         <div style="background: var(--bg-app); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
           <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">Your rating:</span><br>

@@ -13,6 +13,7 @@ export async function setupUserProfile() {
 
   if (data && data.length > 0) {
     const profile = data[0];
+    state.profile = profile;
     state.isAdmin = profile.is_admin === true;
     state.isSuperadmin = profile.is_superadmin === true;
     state.lastNicknameChange = profile.last_nickname_change;
