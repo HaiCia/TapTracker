@@ -1,0 +1,29 @@
+name: Monthly Pubs Sync
+
+on:
+  schedule:
+    # Runs at 03:00 on day 1 of every month
+    - cron: '0 3 1 * *'
+  workflow_dispatch: # Allows manual trigger from the GitHub UI
+
+jobs:
+  sync-pubs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm ci || npm install
+        
+      - name: Run Auto Sync Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: node scripts/auto_sync_pubs.js
