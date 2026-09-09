@@ -88,6 +88,27 @@ window.openPubDetails = openPubDetails;
 window.savePubTexts = savePubTexts;
 window.handleAddVisit = handleAddVisit;
 window.saveAdminPubInfo = saveAdminPubInfo;
+
+window.toggleDarkMode = function() {
+  document.body.classList.toggle("dark-mode");
+  const isDark = document.body.classList.contains("dark-mode");
+  localStorage.setItem("taptracker_darkmode", isDark);
+};
+
+document.addEventListener('click', function(event) {
+  const dropdown = document.getElementById("user-dropdown");
+  const btn = document.getElementById("user-display");
+  if (dropdown && !dropdown.classList.contains("hidden")) {
+    if (!dropdown.contains(event.target) && event.target !== btn) {
+      dropdown.classList.add("hidden");
+    }
+  }
+});
+
+// Load dark mode preference on startup
+if (localStorage.getItem("taptracker_darkmode") === "true") {
+  document.body.classList.add("dark-mode");
+}
 window.editNote = function(pubId) {
     alert("Edit note function is not implemented yet. Use 'note' in pub details.");
 };
