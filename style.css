@@ -153,6 +153,7 @@ html {
   background: var(--bg-primary);
   height: 100%;
   overflow: hidden;
+  min-width: 300px;
 }
 
 /* Tryby widoku (Ukryty panel / Tylko lista) */
@@ -586,6 +587,36 @@ body.dark-mode .filter-btn:hover {
 .pub-list-item.active-sidebar-item {
   background-color: rgba(33, 150, 243, 0.15); /* Jasnoniebieskie tło */
   border-left: 4px solid #2196f3; /* Niebieski pasek z boku */
+}
+
+/* --- MEDIUM SCREENS (narrow desktop / tablet landscape) --- */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .content-area {
+    grid-template-columns: 1fr !important;
+    position: relative;
+  }
+  .info-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 320px;
+    min-width: 300px;
+    z-index: 1005;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.2);
+    border-left: 1px solid var(--border-color);
+  }
+  .content-area.sidebar-hidden .info-panel {
+    display: none;
+  }
+  .sidebar-toggle {
+    right: 320px;
+    margin-right: -15px;
+  }
+  .content-area.sidebar-hidden .sidebar-toggle {
+    right: 0;
+    margin-right: 10px;
+  }
 }
 
 /* --- WERSJA MOBILNA --- */
