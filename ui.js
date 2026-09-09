@@ -67,7 +67,8 @@ export function updateSidebarList() {
   const currentBounds = state.map.getBounds();
 
   state.markers.forEach((marker) => {
-    if (marker.matchesFilters && currentBounds.contains(marker.getLatLng())) {
+    const isVisible = state.isListOnly ? marker.matchesFilters : (marker.matchesFilters && currentBounds.contains(marker.getLatLng()));
+    if (isVisible) {
       visibleCount++;
       const pubId = marker.pubData.id;
       const isVisited = marker.pubData.visited;
@@ -243,21 +244,26 @@ export function toggleSidebar() {
 export function toggleViewMode() {
   const contentArea = document.querySelector(".content-area");
   const btn = document.getElementById("view-toggle-btn");
+  const sidebarBtn = document.getElementById("sidebar-toggle-btn");
+
   if (state.isSidebarHidden) {
     state.isSidebarHidden = false;
     contentArea.classList.remove("sidebar-hidden");
-    document.getElementById("sidebar-toggle-btn").innerText = "▶";
+    sidebarBtn.innerText = "▶";
   }
 
   state.isListOnly = !state.isListOnly;
   if (state.isListOnly) {
     contentArea.classList.add("list-only-mode");
     btn.innerText = "🗺️ Map";
+    sidebarBtn.style.display = "none";
   } else {
     contentArea.classList.remove("list-only-mode");
     btn.innerText = "Full List";
+    sidebarBtn.style.display = "flex";
     setTimeout(() => { if (state.map) state.map.invalidateSize(); }, 100);
   }
+  updateSidebarList();
 }
 
 export async function saveRating(pubId, ratingValue) {
@@ -427,7 +433,7 @@ export function openPubDetails(pubId) {
   const buttonAddText = isVisited ? "+ Add another visit" : "+ Add your first visit";
 
   const modalHtml = `
-    <div id="pub-modal-overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
+    <div id="pub-modal-overlay" onclick="if(event.target === this) document.getElementById('pub-modal-overlay').remove()" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
       <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 320px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; text-align: center;">
         
         <button onclick="document.getElementById('pub-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; border: none; background: #eee; border-radius: 50%; width: 26px; height: 26px; font-size: 14px; cursor: pointer; z-index: 10; display:flex; align-items:center; justify-content:center;">✖</button>
