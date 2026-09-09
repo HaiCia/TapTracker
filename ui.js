@@ -15,21 +15,21 @@ export function escapeHTML(str) {
 
 export function getMarkerHtml(isVisited, pubId, isFriendVisited = false, isFavorite = false) {
   let containerClass = "";
-  let innerHtml = "<span>🍺</span>";
+  let innerHtml = '<i class="fa-solid fa-beer-mug-empty icon-inner"></i>';
 
   if (isVisited && isFriendVisited) {
     containerClass = "is-both-visited";
-    innerHtml += '<div class="tick">🍻</div>';
+    innerHtml = '<i class="fa-solid fa-champagne-glasses icon-inner"></i>';
   } else if (isVisited) {
     containerClass = "is-visited";
-    innerHtml += '<div class="tick">✔️</div>';
+    innerHtml = '<i class="fa-solid fa-check icon-inner"></i>';
   } else if (isFriendVisited) {
     containerClass = "is-friend-visited";
-    innerHtml += '<div class="tick">👋</div>';
+    innerHtml = '<i class="fa-solid fa-user-group icon-inner"></i>';
   }
 
   if (isFavorite) {
-    innerHtml += '<div style="position:absolute; top:-8px; right:-8px; font-size:14px; z-index:10;">❤️</div>';
+    innerHtml += '<div class="favorite-badge">❤️</div>';
   }
 
   return `<div class="pub-icon-container ${containerClass}">${innerHtml}</div>`;
