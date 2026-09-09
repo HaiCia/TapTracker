@@ -679,7 +679,7 @@ export async function checkIn(pubId) {
   }).select();
   if (!error && data) {
     state.myCheckin = data[0];
-    openPubDetails(pubId);
+    updateSidebarList();
   }
 }
 
@@ -688,7 +688,7 @@ export async function checkOut() {
   const pubId = state.myCheckin.pub_id;
   await supabaseClient.from('checkins').delete().eq('id', state.myCheckin.id);
   state.myCheckin = null;
-  openPubDetails(pubId);
+  updateSidebarList();
 }
 
 export async function sendChatMessage(pubId) {
