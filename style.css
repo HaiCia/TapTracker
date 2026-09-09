@@ -28,7 +28,7 @@ body.dark-mode {
   --bg-hover: #2a2a2a;
   --text-primary: #f0f0f0;
   --text-secondary: #aaa;
-  --border-color: var(--text-primary);
+  --border-color: #333;
   --border-light: #222;
   --header-shadow: rgba(0, 0, 0, 0.5);
 }
