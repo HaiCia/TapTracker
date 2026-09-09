@@ -434,7 +434,9 @@ export async function toggleFavorite(pubId) {
 }
 
 export function openPubDetails(pubId) {
-  const existingModal = document.getElementById('pub-modal-overlay');\n  if (existingModal) existingModal.remove();\n  state.currentPubId = pubId;
+  const existingModal = document.getElementById('pub-modal-overlay');
+  if (existingModal) existingModal.remove();
+  state.currentPubId = pubId;
   const pub = state.markers.find((m) => m.pubData.id === pubId).pubData;
   const isVisited = pub.visited;
 
