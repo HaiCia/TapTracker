@@ -324,8 +324,8 @@ export async function saveRating(pubId, ratingValue) {
       marker.pubData.visit_history = [today];
       marker.pubData.rating = ratingValue;
       applyFilters();
-      openPubDetails(pubId);
-      return;
+    if (document.getElementById('pub-modal-overlay')) openPubDetails(pubId);
+    return;
     }
 
     await supabaseClient.from("visits").update({ rating: ratingValue }).eq("pub_id", pubId).eq("user_id", state.currentUser.id);
@@ -419,7 +419,7 @@ export async function toggleFavorite(pubId) {
     marker.pubData.visit_history = [today];
     marker.pubData.is_favorite = newState;
     applyFilters();
-    openPubDetails(pubId);
+    if (document.getElementById('pub-modal-overlay')) openPubDetails(pubId);
     return;
   }
 
@@ -650,7 +650,7 @@ export async function handleAddVisit(pubId) {
   }
 
   applyFilters();
-  openPubDetails(pubId);
+  if (document.getElementById('pub-modal-overlay')) openPubDetails(pubId);
 }
 
 
