@@ -73,70 +73,75 @@ export function updateSidebarList() {
       const pubId = marker.pubData.id;
       const isVisited = marker.pubData.visited;
 
-      let addressHtml = marker.pubData.address
-        ? `<div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px; font-weight: 500;">📍 ${escapeHTML(marker.pubData.address)}</div>`
-        : "";
 
+      // TOP ROW: Image and Content
       let imgHtml = marker.pubData.image_url
-        ? `<img onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" src="${escapeHTML(marker.pubData.image_url)}" loading="lazy" style="cursor:pointer; width: ${state.isListOnly ? '110px' : '75px'}; height: ${state.isListOnly ? '110px' : '75px'}; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">`
-        : `<div onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.openPubDetails('${pubId}')" style="cursor:pointer; width: ${state.isListOnly ? '110px' : '75px'}; height: ${state.isListOnly ? '110px' : '75px'}; background: var(--bg-app); border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#ccc; font-size: 24px;"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
-
-      let noteHtml = marker.pubData.note
-        ? `<div style="font-size: 11px; color: var(--text-primary); margin-top: 6px; background: rgba(243, 156, 18, 0.15); padding: 4px 6px; border-radius: 4px; border-left: 3px solid #f39c12; font-weight: 500;">🔒 ${escapeHTML(marker.pubData.note)}</div>`
-        : "";
-
-      let reviewHtml = marker.pubData.review
-        ? `<div style="font-size: 11px; color: var(--text-primary); margin-top: 4px; background: rgba(26, 188, 156, 0.15); padding: 4px 6px; border-radius: 4px; border-left: 3px solid #1abc9c; font-weight: 500;">💬 ${escapeHTML(marker.pubData.review)}</div>`
-        : "";
+        ? `<img src="${escapeHTML(marker.pubData.image_url)}" class="pub-card-thumbnail" loading="lazy" alt="Pub thumbnail">`
+        : `<div class="pub-card-thumbnail"><i class="fa-solid fa-beer-mug-empty"></i></div>`;
 
       const comm = marker.pubData.community || { avg: 0, count: 0 };
-      const communityText = comm.count > 0
-        ? `<span style="color: #f39c12; font-weight:900;">${comm.avg} ★</span> (${comm.count})`
-        : `<span style="font-style:italic;">No ratings</span>`;
+      let ratingHtml = '';
+      if (comm.count > 0) {
+        ratingHtml = `<div class="pub-card-badge rating">⭐ ${comm.avg} (${comm.count})</div>`;
+      } else {
+        ratingHtml = `<div class="pub-card-badge">No reviews</div>`;
+      }
 
-      const myRatingText = marker.pubData.rating && marker.pubData.rating > 0
-        ? `<span style="color: #f39c12; font-weight:900;">${marker.pubData.rating} ★</span>`
-        : `<span style="font-style:italic;">Unrated</span>`;
+      let visitsCount = marker.pubData.visit_history ? marker.pubData.visit_history.length : (isVisited ? 1 : 0);
+      let visitBadge = isVisited 
+        ? `<div class="pub-card-badge" style="color:#4ade80; background:rgba(74, 222, 128, 0.15)">✔️ ${visitsCount} visit${visitsCount > 1 ? 's' : ''}</div>` 
+        : `<div class="pub-card-badge">To visit</div>`;
+
+      let activeCheckinsHtml = (state.checkins && state.checkins[pubId] > 0) 
+        ? `<div class="pub-card-badge checkin">👥 ${state.checkins[pubId]}</div>` 
+        : '';
+        
+      let unreadChatHtml = (state.pubMessages && state.pubMessages[pubId] && state.pubMessages[pubId].length > 0)
+        ? `<div class="pub-card-badge" style="background:rgba(239, 68, 68, 0.15); color:#f87171;">💬 ${state.pubMessages[pubId].length}</div>`
+        : '';
 
       let adminButtons = (state.isAdmin || state.isSuperadmin)
-          ? `<button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="background:none; border:none; cursor:pointer; font-size:12px; margin-left: 5px;">✏️</button>`
+          ? `<span style="font-size:12px; cursor:pointer;" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">✏️</span>`
           : "";
 
-      const favIcon = marker.pubData.is_favorite ? '<span style="font-size: 14px; margin-right: 4px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));">❤️</span>' : '';
+      // Action Buttons
+      let favClass = marker.pubData.is_favorite ? 'is-favorite' : '';
+      let favIconHtml = `<button class="pub-card-icon-btn ${favClass}" aria-label="Favorite" onclick="event.stopPropagation(); window.toggleFavorite('${pubId}')">❤️</button>`;
 
       listHtml += `
-        <div id="sidebar-item-${pubId}" class="pub-list-item" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');" style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-light); gap: 12px; cursor: pointer;">
-            ${imgHtml}
+        <div id="sidebar-item-${pubId}" class="pub-card" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}'); window.openPubDetails('${pubId}');">
             
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
-                <div style="font-size: 15px; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; line-height: 1.2;">
-                    ${favIcon} <span style="word-break: break-word;">${escapeHTML(marker.pubData.name)}</span> ${adminButtons}
+            <div class="pub-card-top">
+                ${imgHtml}
+                <div class="pub-card-content">
+                    <div class="pub-card-title">
+                        ${escapeHTML(marker.pubData.name)} ${adminButtons}
+                    </div>
+                    <div class="pub-card-address" title="${escapeHTML(marker.pubData.address || '')}">
+                        ${marker.pubData.address ? escapeHTML(marker.pubData.address) : 'No address provided'}
+                    </div>
+                    <div class="pub-card-meta">
+                        ${ratingHtml}
+                        ${visitBadge}
+                        ${activeCheckinsHtml}
+                        ${unreadChatHtml}
+                    </div>
                 </div>
-                ${addressHtml}
-                
-                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-weight: 700; display: flex; gap: 8px; flex-wrap: wrap;">
-                    <span>⭐ ${myRatingText}</span>
-                    <span>👥 ${communityText}</span>
-                </div>
-                
-                <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px; font-style: italic;">
-                    🕒 ${marker.pubData.visit_history && marker.pubData.visit_history.length > 0 ? `Visits: ${marker.pubData.visit_history.length} (Last: ${marker.pubData.visit_history[marker.pubData.visit_history.length - 1]})` : `Never visited`}
-                </div>
-                
-                ${noteHtml}
-                ${reviewHtml}
             </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; min-width: 120px;">
-                <span style="font-size: 10px; font-weight: 900; color: ${isVisited ? '#27ae60' : '#7f8c8d'}; text-transform: uppercase;">
-                    ${isVisited ? "✔️ VISITED" : "➕ TO VISIT"}
-                </span>
-                ${state.checkins && state.checkins[pubId] > 0 ? `<div style="margin-top:4px; font-size:10px; font-weight:bold; background:#2196f3; color:white; padding:4px 6px; border-radius:12px; text-align:center;">👥 ${state.checkins[pubId]} checked in</div>` : ""}
-                ${state.pubMessages && state.pubMessages[pubId] && state.pubMessages[pubId].length > 0 ? `<div style="margin-top:4px; font-size:10px; font-weight:bold; background:#e74c3c; color:white; padding:4px 6px; border-radius:12px; text-align:center;">💬 ${state.pubMessages[pubId].length} msgs</div>` : ""}
-                <button onclick="event.stopPropagation(); window.openPubDetails('${pubId}')" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: var(--bg-app); border: 1px solid var(--border-color); color: var(--text-secondary); width: 100%; cursor: pointer;">
-                    📖 VIEW
-                </button>
-                ${state.isListOnly ? `<button onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100);" style="padding: 6px 12px; font-size: 10px; border-radius: 20px; font-weight: 900; background: #2196f3; border: none; color: white; width: 100%; cursor: pointer; margin-top: 4px;">🗺️ SEE ON MAP</button>` : ''}
+
+            <div class="pub-card-bottom">
+                <div class="pub-card-actions">
+                    <button class="pub-card-btn ${isVisited ? '' : 'primary'}" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">
+                        ${isVisited ? "ADD AGAIN" : "MARK VISITED"}
+                    </button>
+                    <button class="pub-card-btn" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">
+                        VIEW DETAILS
+                    </button>
+                    ${state.isListOnly ? `<button class="pub-card-btn" onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100);">MAP</button>` : ''}
+                </div>
+                ${favIconHtml}
             </div>
+
         </div>
       `;
     }
