@@ -366,13 +366,15 @@ body.dark-mode .filter-btn:hover {
   font-weight: 900;
   font-size: 13px;
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-app);\n  color: var(--text-primary);
+  background: var(--bg-app);
+  color: var(--text-primary);
 }
 
 #pub-list-container {
   overflow-y: auto;
   flex: 1;
   background: var(--bg-primary);
+  container-type: inline-size;
 }
 
 .pub-list-item {
@@ -712,6 +714,15 @@ body.dark-mode .filter-btn:hover {
   box-shadow: 0 0 0 1px var(--pub-primary);
 }
 
+/* Górna część karty (w pełnym widoku: poziomo w flex: 1) */
+.pub-card-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
 /* 1. Miniatura i fallback */
 .pub-thumb-box {
   width: 68px;
@@ -870,14 +881,200 @@ body.dark-mode .filter-btn:hover {
   background-color: rgba(239, 68, 68, 0.15);
 }
 
-/* Responsywność */
-@media (max-width: 680px) {
+/* --- Izolacja dla sidebaru (Compact Mode) --- */
+@container (max-width: 480px) {
   .pub-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .pub-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .pub-thumb-box {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+  }
+
+  .pub-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pub-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pub-name {
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pub-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .pub-actions .btn {
+    flex: 1;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  .pub-actions .btn-icon {
+    flex: 0 0 auto;
+    padding: 5px;
+  }
+}
+
+.sidebar .pub-card,
+.pub-card.is-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px;
+}
+
+.sidebar .pub-card .pub-card-top,
+.pub-card.is-compact .pub-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebar .pub-card .pub-thumb-box,
+.pub-card.is-compact .pub-thumb-box {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.sidebar .pub-card .pub-details,
+.pub-card.is-compact .pub-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar .pub-card .pub-heading,
+.pub-card.is-compact .pub-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar .pub-card .pub-name,
+.pub-card.is-compact .pub-name {
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar .pub-card .pub-actions,
+.pub-card.is-compact .pub-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sidebar .pub-card .pub-actions .btn,
+.pub-card.is-compact .pub-actions .btn {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.sidebar .pub-card .pub-actions .btn-icon,
+.pub-card.is-compact .pub-actions .btn-icon {
+  flex: 0 0 auto;
+  padding: 5px;
+}
+
+/* W widoku pełnej listy (.list-only-mode) wymuś układ poziomy */
+.content-area.list-only-mode .pub-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+}
+
+.content-area.list-only-mode .pub-card .pub-card-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.content-area.list-only-mode .pub-card .pub-thumb-box {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+}
+
+.content-area.list-only-mode .pub-card .pub-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.content-area.list-only-mode .pub-card .pub-name {
+  font-size: 0.95rem;
+}
+
+.content-area.list-only-mode .pub-card .pub-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: auto;
+  padding-top: 0;
+  border-top: none;
+  justify-content: flex-end;
+}
+
+.content-area.list-only-mode .pub-card .pub-actions .btn {
+  flex: initial;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+/* Responsywność dla małych ekranów poza compact mode */
+@media (max-width: 680px) {
+  .content-area.list-only-mode .pub-card {
     flex-wrap: wrap;
     padding: 12px;
   }
 
-  .pub-actions {
+  .content-area.list-only-mode .pub-actions {
     width: 100%;
     margin-top: 8px;
     padding-top: 8px;

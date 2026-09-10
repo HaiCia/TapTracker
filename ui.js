@@ -111,26 +111,28 @@ export function updateSidebarList() {
       let favClass = marker.pubData.is_favorite ? 'is-favorite' : '';
 
       listHtml += `
-        <article id="sidebar-item-${pubId}" class="pub-card" data-pub-id="${pubId}" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
-          ${thumbHtml}
+        <article id="sidebar-item-${pubId}" class="pub-card ${state.isListOnly ? '' : 'is-compact'}" data-pub-id="${pubId}" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
+          <div class="pub-card-top">
+            ${thumbHtml}
 
-          <div class="pub-details">
-            <div class="pub-heading">
-              <h3 class="pub-name">${escapeHTML(marker.pubData.name)}</h3>
-              ${adminButton}
-              <span class="pub-badge ${isVisited ? 'badge-visited' : 'badge-to-visit'}">${isVisited ? 'Visited' : 'To visit'}</span>
-            </div>
+            <div class="pub-details">
+              <div class="pub-heading">
+                <h3 class="pub-name">${escapeHTML(marker.pubData.name)}</h3>
+                ${adminButton}
+                <span class="pub-badge ${isVisited ? 'badge-visited' : 'badge-to-visit'}">${isVisited ? 'Visited' : 'To visit'}</span>
+              </div>
 
-            <p class="pub-address" title="${escapeHTML(marker.pubData.address || 'No address provided')}">
-              ${escapeHTML(marker.pubData.address || 'No address provided')}
-            </p>
+              <p class="pub-address" title="${escapeHTML(marker.pubData.address || 'No address provided')}">
+                ${escapeHTML(marker.pubData.address || 'No address provided')}
+              </p>
 
-            <div class="pub-meta">
-              <span class="meta-tag">${ratingText}</span>
-              <span class="meta-separator">•</span>
-              <span class="meta-tag">${noteText}</span>
-              ${checkinTag}
-              ${chatTag}
+              <div class="pub-meta">
+                <span class="meta-tag">${ratingText}</span>
+                <span class="meta-separator">•</span>
+                <span class="meta-tag">${noteText}</span>
+                ${checkinTag}
+                ${chatTag}
+              </div>
             </div>
           </div>
 
