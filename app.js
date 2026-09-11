@@ -38,7 +38,8 @@ import {
   sendChatMessage,
   loadChatMessages,
   renderChatMessages,
-  toggleSidebarChat
+  toggleSidebarChat,
+  toggleLegend
 } from './ui.js';
 import { initBottomSheet, initSidebarEventIsolation } from './sheet.js';
 
@@ -91,6 +92,7 @@ window.stopComparing = stopComparing;
 
 window.toggleSidebar = toggleSidebar;
 window.toggleViewMode = toggleViewMode;
+window.toggleLegend = toggleLegend;
 window.setFilter = setFilter;
 window.handleSearch = handleSearch;
 

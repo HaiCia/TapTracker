@@ -803,3 +803,27 @@ export function toggleSidebarChat(pubId) {
     container.style.display = 'none';
   }
 }
+
+export function toggleLegend(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const wrapper = document.getElementById('map-legend');
+  if (wrapper) {
+    wrapper.classList.toggle('is-open');
+  }
+}
+window.toggleLegend = toggleLegend;
+
+// Zamykanie popovera legendy przy kliknięciu poza obszarem #map-legend
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const legendWrapper = document.getElementById('map-legend');
+    if (legendWrapper && legendWrapper.classList.contains('is-open')) {
+      if (!legendWrapper.contains(e.target)) {
+        legendWrapper.classList.remove('is-open');
+      }
+    }
+  });
+}
+

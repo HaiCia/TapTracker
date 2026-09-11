@@ -17,7 +17,7 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="style.css?v=isolated" />
+    <link rel="stylesheet" href="style.css?v=legend" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -120,12 +120,24 @@
 
         <div class="map-section">
           <div id="map"></div>
-          <div class="map-legend">
-            <div><span class="legend-pin" style="background:#34495e"><i class="fa-solid fa-beer-mug-empty"></i></span> To Visit</div>
-            <div><span class="legend-pin" style="background:#27ae60"><i class="fa-solid fa-check"></i></span> Visited</div>
-            <div><span class="legend-pin" style="background:#3498db"><i class="fa-solid fa-user-group"></i></span> Friend</div>
-            <div><span class="legend-pin" style="background:#f39c12"><i class="fa-solid fa-champagne-glasses"></i></span> Both</div>
-            <div><span class="legend-badge">❤️</span> Favorite</div>
+          <div id="map-legend" class="map-legend-wrapper">
+            <button
+              id="legend-toggle"
+              class="legend-toggle-btn"
+              type="button"
+              aria-label="Toggle Legend"
+              title="Toggle Map Legend"
+              onclick="window.toggleLegend(event)"
+            >
+              ℹ️
+            </button>
+            <div class="legend-card map-legend">
+              <div><span class="legend-pin" style="background:#34495e"><i class="fa-solid fa-beer-mug-empty"></i></span> To Visit</div>
+              <div><span class="legend-pin" style="background:#27ae60"><i class="fa-solid fa-check"></i></span> Visited</div>
+              <div><span class="legend-pin" style="background:#3498db"><i class="fa-solid fa-user-group"></i></span> Friend</div>
+              <div><span class="legend-pin" style="background:#f39c12"><i class="fa-solid fa-champagne-glasses"></i></span> Both</div>
+              <div><span class="legend-badge">❤️</span> Favorite</div>
+            </div>
           </div>
         </div>
 
@@ -169,6 +181,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="app.js?v=isolated"></script>
+    <script type="module" src="app.js?v=legend"></script>
   </body>
 </html>

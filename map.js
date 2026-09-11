@@ -81,6 +81,10 @@ export function initMap() {
     if (dropdown && dropdown.classList.contains("show")) {
       dropdown.classList.remove("show");
     }
+    const legendWrapper = document.getElementById("map-legend");
+    if (legendWrapper && legendWrapper.classList.contains("is-open")) {
+      legendWrapper.classList.remove("is-open");
+    }
   });
 
   state.map.on("moveend", updateSidebarList);
@@ -91,6 +95,12 @@ export function initMap() {
   if (sidebarEl && typeof L !== 'undefined' && L.DomEvent) {
     L.DomEvent.disableClickPropagation(sidebarEl);
     L.DomEvent.disableScrollPropagation(sidebarEl);
+  }
+
+  const legendWrapper = document.getElementById("map-legend");
+  if (legendWrapper && typeof L !== 'undefined' && L.DomEvent) {
+    L.DomEvent.disableClickPropagation(legendWrapper);
+    L.DomEvent.disableScrollPropagation(legendWrapper);
   }
 }
 
