@@ -232,3 +232,52 @@ export async function revokeAdminStatus() {
     }
   }
 }
+
+/**
+ * Sign up a new user with email, password, and required Cloudflare Turnstile captcha token.
+ */
+export async function signUpUser(email, password, captchaToken, client = supabaseClient) {
+  const cleanEmail = (email || '').trim();
+  if (!cleanEmail) {
+    return { data: null, error: { message: 'Fill in all fields!' } };
+  }
+  if (!password) {
+    return { data: null, error: { message: 'Fill in all fields!' } };
+  }
+  if (!captchaToken || typeof captchaToken !== 'string' || !captchaToken.trim()) {
+    return { data: null, error: { message: 'Please complete the Cloudflare Turnstile verification.' } };
+  }
+
+  return await client.auth.signUp({
+    email: cleanEmail,
+    password,
+    options: {
+      captchaToken: captchaToken.trim()
+    }
+  });
+}
+
+/**
+ * Sign in an existing user with email, password, and required Cloudflare Turnstile captcha token.
+ */
+export async function signInUser(email, password, captchaToken, client = supabaseClient) {
+  const cleanEmail = (email || '').trim();
+  if (!cleanEmail) {
+    return { data: null, error: { message: 'Fill in all fields!' } };
+  }
+  if (!password) {
+    return { data: null, error: { message: 'Fill in all fields!' } };
+  }
+  if (!captchaToken || typeof captchaToken !== 'string' || !captchaToken.trim()) {
+    return { data: null, error: { message: 'Please complete the Cloudflare Turnstile verification.' } };
+  }
+
+  return await client.auth.signInWithPassword({
+    email: cleanEmail,
+    password,
+    options: {
+      captchaToken: captchaToken.trim()
+    }
+  });
+}
+

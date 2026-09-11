@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TapTracker - Login</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   </head>
   <body class="login-body">
     <div class="login-container">
@@ -20,6 +21,15 @@
 
       <div id="error-msg"></div>
 
+      <div
+        class="cf-turnstile"
+        data-sitekey="1x00000000000000000000AA"
+        data-callback="onTurnstileSuccess"
+        data-expired-callback="onTurnstileExpired"
+        data-error-callback="onTurnstileError"
+        style="margin: 4px 0; display: flex; justify-content: center;"
+      ></div>
+
       <button id="login-btn" class="login-btn" onclick="handleAuth()">
         LOG IN
       </button>
@@ -31,16 +41,46 @@
 
     <!-- Supabase i Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
+    <script type="module" src="config.js"></script>
 
     <script type="module">
-      import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+      import { supabaseClient } from './api.js';
+      import { signUpUser, signInUser } from './auth.js';
+      import { TURNSTILE_SITE_KEY } from './config.js';
       
-      const supabaseClient = supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY,
-      );
       let isSignUp = false;
+      let turnstileToken = null;
+
+      // Update sitekey attribute dynamically if configured in config.js
+      const turnstileContainer = document.querySelector('.cf-turnstile');
+      if (turnstileContainer && TURNSTILE_SITE_KEY) {
+        turnstileContainer.setAttribute('data-sitekey', TURNSTILE_SITE_KEY);
+      }
+
+      function onTurnstileSuccess(token) {
+        turnstileToken = token;
+        const errorDiv = document.getElementById("error-msg");
+        if (errorDiv && errorDiv.innerText.includes("Turnstile")) {
+          errorDiv.innerText = "";
+        }
+      }
+
+      function onTurnstileExpired() {
+        turnstileToken = null;
+      }
+
+      function onTurnstileError() {
+        turnstileToken = null;
+        const errorDiv = document.getElementById("error-msg");
+        if (errorDiv) {
+          errorDiv.innerText = "Verification failed. Please retry.";
+        }
+      }
+
+      // Expose callbacks to window for Cloudflare Turnstile API
+      window.onTurnstileSuccess = onTurnstileSuccess;
+      window.onTurnstileExpired = onTurnstileExpired;
+      window.onTurnstileError = onTurnstileError;
 
       async function handleAuth() {
         const email = document.getElementById("email").value.trim();
@@ -53,20 +93,37 @@
           return;
         }
 
-        let response;
-        if (isSignUp) {
-          response = await supabaseClient.auth.signUp({ email, password });
-        } else {
-          response = await supabaseClient.auth.signInWithPassword({
-            email,
-            password,
-          });
+        if (!turnstileToken) {
+          errorDiv.innerText = "Please complete the Cloudflare Turnstile verification.";
+          return;
         }
 
-        if (response.error) {
-          errorDiv.innerText = response.error.message;
-        } else {
-          window.location.href = "index.html";
+        const loginBtn = document.getElementById("login-btn");
+        if (loginBtn) loginBtn.disabled = true;
+
+        try {
+          let response;
+          if (isSignUp) {
+            response = await signUpUser(email, password, turnstileToken, supabaseClient);
+          } else {
+            response = await signInUser(email, password, turnstileToken, supabaseClient);
+          }
+
+          if (response.error) {
+            errorDiv.innerText = response.error.message;
+          } else {
+            window.location.href = "index.html";
+          }
+        } finally {
+          if (loginBtn) loginBtn.disabled = false;
+          turnstileToken = null;
+          if (window.turnstile && typeof window.turnstile.reset === "function") {
+            try {
+              window.turnstile.reset();
+            } catch (resetErr) {
+              console.warn("Turnstile reset warning:", resetErr);
+            }
+          }
         }
       }
 
@@ -82,6 +139,9 @@
         document.querySelector(".toggle-mode-btn").innerText = isSignUp
           ? "Already have an account? Log in"
           : "Need an account? Sign up";
+
+        const errorDiv = document.getElementById("error-msg");
+        if (errorDiv) errorDiv.innerText = "";
       }
 
       // Przypisanie do window dla onclick z HTML
