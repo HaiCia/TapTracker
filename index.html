@@ -17,7 +17,7 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="style.css?v=unified-controls" />
+    <link rel="stylesheet" href="style.css?v=theme-tokens-v1" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -34,7 +34,7 @@
             onclick="toggleViewMode()"
             class="filter-btn"
           >
-            Full List
+          All Pubs
           </button>
 
           <div class="user-menu-container">
@@ -48,22 +48,39 @@
 
             <div class="user-dropdown" id="user-dropdown">
               <div class="friend-code-section">
-                FRIEND CODE:<br />
-                <div class="friend-code-controls">
-                  <strong id="my-friend-code">⏳...</strong>
+                FRIEND CODE
+                <div class="friend-code-input-row">
+                  <input
+                    id="friend-code-input"
+                    type="text"
+                    readonly
+                    value="⏳..."
+                    title="Your friend code — share this with friends"
+                    aria-label="Friend Code"
+                  />
                   <button
+                    id="btn-copy-code"
                     onclick="copyFriendCode()"
                     title="Copy code"
-                    class="filter-btn icon-btn"
+                    aria-label="Copy friend code"
+                    class="fc-btn"
                   >
-                    📋
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
                   </button>
                   <button
+                    id="btn-regen-code"
                     onclick="rotateFriendCode()"
-                    title="Reset code"
-                    class="filter-btn icon-btn"
+                    title="Regenerate code"
+                    aria-label="Regenerate friend code"
+                    class="fc-btn"
                   >
-                    🔄
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
                   </button>
                 </div>
               </div>

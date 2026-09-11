@@ -19,7 +19,7 @@ export async function setupUserProfile() {
     state.lastNicknameChange = profile.last_nickname_change;
     state.lastFriendCodeChange = profile.last_friend_code_change;
 
-    document.getElementById('my-friend-code').innerText = profile.friend_code || '⏳...';
+    document.getElementById('friend-code-input').value = profile.friend_code || '⏳...';
     if (profile.nickname) displayName = profile.nickname;
   } else {
     generateNewFriendCode();
@@ -57,16 +57,18 @@ export async function generateNewFriendCode() {
     .from('profiles')
     .upsert({ id: state.currentUser.id, friend_code: newCode });
   if (!error) {
-    document.getElementById('my-friend-code').innerText = newCode;
+    document.getElementById('friend-code-input').value = newCode;
   }
 }
 
 export function copyFriendCode() {
-  const codeText = document.getElementById('my-friend-code').innerText;
+  const input = document.getElementById('friend-code-input');
+  const codeText = input ? input.value : '';
   if (!codeText || codeText.includes('⏳')) return;
   navigator.clipboard
     .writeText(codeText)
-    .then(() => alert('Copied: ' + codeText));
+    .then(() => window.showToast && window.showToast('Code copied! 📋', 'success'))
+    .catch(() => window.showToast && window.showToast('Copy failed — try manually', 'error'));
 }
 
 function getDaysRemaining(lastDateString) {
@@ -110,7 +112,7 @@ export async function changeNickname() {
 export async function rotateFriendCode() {
   const daysLeft = getDaysRemaining(state.lastFriendCodeChange);
   if (daysLeft > 0) {
-    alert(`You can only generate a new Friend Code once every 30 days. Please wait ${daysLeft} more days.`);
+    window.showToast && window.showToast(`Wait ${daysLeft} more days to regenerate.`, 'error');
     return;
   }
 
@@ -124,11 +126,11 @@ export async function rotateFriendCode() {
       .eq('id', state.currentUser.id);
 
     if (error) {
-      alert('Error generating new code: ' + error.message);
+      window.showToast && window.showToast('Error generating new code.', 'error');
     } else {
       state.lastFriendCodeChange = nowIso;
-      document.getElementById('my-friend-code').innerText = newCode;
-      alert('New Friend Code generated!');
+      document.getElementById('friend-code-input').value = newCode;
+      window.showToast && window.showToast('New friend code generated! 🔄', 'success');
     }
   }
 }

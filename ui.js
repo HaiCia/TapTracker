@@ -2,6 +2,32 @@ import { supabaseClient } from './api.js';
 import { state } from './state.js';
 import { applyFilters } from './map.js';
 
+// --- Toast Notification System ---
+export function showToast(message, type = 'info', durationMs = 2200) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  const dismiss = () => {
+    toast.classList.add('toast-exit');
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  };
+
+  const timer = setTimeout(dismiss, durationMs);
+  toast.addEventListener('click', () => { clearTimeout(timer); dismiss(); });
+}
+
+// Expose globally for inline HTML usage
+window.showToast = showToast;
+
 // --- XSS Protection Function ---
 export function escapeHTML(str) {
   if (!str) return "";
@@ -205,7 +231,7 @@ export function updateSidebarList() {
         <span style="color:#f39c12; font-weight:900;">${pct}% done</span>
       </div>`;
     } else {
-      pubInfoEl.innerText = `VISIBLE: ${visibleCount}`;
+      pubInfoEl.innerText = `PUBS IN VIEW (${visibleCount})`;
     }
   }
 

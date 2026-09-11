@@ -13,6 +13,7 @@ import {
 } from './auth.js';
 import { initMap, loadPubs, applyFilters, flyToPub } from './map.js';
 import {
+  showToast,
   getMarkerHtml,
   getStarsHtml,
   highlightSidebar,
