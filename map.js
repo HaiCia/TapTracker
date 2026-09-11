@@ -86,6 +86,12 @@ export function initMap() {
   state.map.on("moveend", updateSidebarList);
 
   loadPubs();
+
+  const sidebarEl = document.querySelector('.sidebar');
+  if (sidebarEl && typeof L !== 'undefined' && L.DomEvent) {
+    L.DomEvent.disableClickPropagation(sidebarEl);
+    L.DomEvent.disableScrollPropagation(sidebarEl);
+  }
 }
 
 export async function loadPubs() {

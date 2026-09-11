@@ -51,7 +51,7 @@ export function getStarsHtml(pubId, currentRating) {
 }
 
 export function highlightSidebar(pubId) {
-  document.querySelectorAll(".pub-list-item").forEach((el) => el.classList.remove("active-sidebar-item"));
+  document.querySelectorAll(".pub-full-row, .pub-sidebar-card, .pub-card, .pub-list-item").forEach((el) => el.classList.remove("active-sidebar-item"));
   const activeItem = document.getElementById(`sidebar-item-${pubId}`);
   if (activeItem) {
     activeItem.classList.add("active-sidebar-item");
@@ -73,22 +73,8 @@ export function updateSidebarList() {
       const pubId = marker.pubData.id;
       const isVisited = marker.pubData.visited;
 
-
       // Miniatura i fallback
       let imgUrl = marker.pubData.image_url ? escapeHTML(marker.pubData.image_url) : '';
-      let thumbHtml = `
-        <div class="pub-thumb-box">
-          <img 
-            src="${imgUrl}" 
-            alt="${escapeHTML(marker.pubData.name)}" 
-            class="pub-thumb" 
-            loading="lazy"
-            ${!imgUrl ? 'style="display:none;"' : ''}
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-          />
-          <div class="pub-thumb-fallback" ${!imgUrl ? 'style="display:flex;"' : ''}>🍺</div>
-        </div>
-      `;
 
       const comm = marker.pubData.community || { avg: 0, count: 0 };
       let ratingText = comm.count > 0 ? `⭐ ${comm.avg} (${comm.count})` : '⭐ No reviews';
@@ -110,40 +96,99 @@ export function updateSidebarList() {
 
       let favClass = marker.pubData.is_favorite ? 'is-favorite' : '';
 
-      listHtml += `
-        <article id="sidebar-item-${pubId}" class="pub-card ${state.isListOnly ? '' : 'is-compact'}" data-pub-id="${pubId}" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
-          <div class="pub-card-top">
-            ${thumbHtml}
-
-            <div class="pub-details">
-              <div class="pub-heading">
-                <h3 class="pub-name">${escapeHTML(marker.pubData.name)}</h3>
-                ${adminButton}
-                <span class="pub-badge ${isVisited ? 'badge-visited' : 'badge-to-visit'}">${isVisited ? 'Visited' : 'To visit'}</span>
+      if (state.isListOnly) {
+        // List B: Full List View - wide horizontal table/row layout
+        listHtml += `
+          <article id="sidebar-item-${pubId}" class="pub-full-row" data-pub-id="${pubId}" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
+            <div class="pub-full-main">
+              <div class="pub-full-thumb-box">
+                <img 
+                  src="${imgUrl}" 
+                  alt="${escapeHTML(marker.pubData.name)}" 
+                  class="pub-full-thumb" 
+                  loading="lazy"
+                  ${!imgUrl ? 'style="display:none;"' : ''}
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                />
+                <div class="pub-full-thumb-fallback" ${!imgUrl ? 'style="display:flex;"' : ''}>🍺</div>
               </div>
 
-              <p class="pub-address" title="${escapeHTML(marker.pubData.address || 'No address provided')}">
-                ${escapeHTML(marker.pubData.address || 'No address provided')}
-              </p>
+              <div class="pub-full-details">
+                <div class="pub-full-header">
+                  <h3 class="pub-full-name">${escapeHTML(marker.pubData.name)}</h3>
+                  ${adminButton}
+                  <span class="pub-badge ${isVisited ? 'badge-visited' : 'badge-to-visit'}">${isVisited ? 'Visited' : 'To visit'}</span>
+                </div>
 
-              <div class="pub-meta">
-                <span class="meta-tag">${ratingText}</span>
-                <span class="meta-separator">•</span>
-                <span class="meta-tag">${noteText}</span>
-                ${checkinTag}
-                ${chatTag}
+                <p class="pub-full-address" title="${escapeHTML(marker.pubData.address || 'No address provided')}">
+                  ${escapeHTML(marker.pubData.address || 'No address provided')}
+                </p>
+
+                <div class="pub-full-meta">
+                  <span class="meta-tag">${ratingText}</span>
+                  <span class="meta-separator">•</span>
+                  <span class="meta-tag">${noteText}</span>
+                  ${checkinTag}
+                  ${chatTag}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="pub-actions">
-            <button type="button" class="btn ${isVisited ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-status" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">${isVisited ? 'Add Again' : 'Mark Visited'}</button>
-            <button type="button" class="btn btn-secondary" data-action="details" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">Details</button>
-            <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); if (state.isListOnly) { window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100); } else { window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); }">🗺️</button>
-            <button type="button" class="btn-icon btn-action btn-favorite ${favClass}" data-action="favorite" title="Favorite" aria-label="Favorite" onclick="event.stopPropagation(); window.toggleFavorite('${pubId}')">❤️</button>
-          </div>
-        </article>
-      `;
+            <div class="pub-full-actions">
+              <button type="button" class="btn ${isVisited ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-status" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">${isVisited ? 'Add Again' : 'Mark Visited'}</button>
+              <button type="button" class="btn btn-secondary" data-action="details" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">Details</button>
+              <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100);">🗺️</button>
+              <button type="button" class="btn-icon btn-action btn-favorite ${favClass}" data-action="favorite" title="Favorite" aria-label="Favorite" onclick="event.stopPropagation(); window.toggleFavorite('${pubId}')">❤️</button>
+            </div>
+          </article>
+        `;
+      } else {
+        // List A: Map Sidebar / Mobile Bottom Sheet - compact 2-row card
+        listHtml += `
+          <article id="sidebar-item-${pubId}" class="pub-sidebar-card" data-pub-id="${pubId}" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
+            <div class="pub-sidebar-card-top">
+              <div class="pub-sidebar-thumb-box">
+                <img 
+                  src="${imgUrl}" 
+                  alt="${escapeHTML(marker.pubData.name)}" 
+                  class="pub-sidebar-thumb" 
+                  loading="lazy"
+                  ${!imgUrl ? 'style="display:none;"' : ''}
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                />
+                <div class="pub-sidebar-thumb-fallback" ${!imgUrl ? 'style="display:flex;"' : ''}>🍺</div>
+              </div>
+
+              <div class="pub-sidebar-details">
+                <div class="pub-sidebar-heading">
+                  <h3 class="pub-sidebar-name">${escapeHTML(marker.pubData.name)}</h3>
+                  ${adminButton}
+                  <span class="pub-badge ${isVisited ? 'badge-visited' : 'badge-to-visit'}">${isVisited ? 'Visited' : 'To visit'}</span>
+                </div>
+
+                <p class="pub-sidebar-address" title="${escapeHTML(marker.pubData.address || 'No address provided')}">
+                  ${escapeHTML(marker.pubData.address || 'No address provided')}
+                </p>
+
+                <div class="pub-sidebar-meta">
+                  <span class="meta-tag">${ratingText}</span>
+                  <span class="meta-separator">•</span>
+                  <span class="meta-tag">${noteText}</span>
+                  ${checkinTag}
+                  ${chatTag}
+                </div>
+              </div>
+            </div>
+
+            <div class="pub-sidebar-actions">
+              <button type="button" class="btn ${isVisited ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-status" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">${isVisited ? 'Add Again' : 'Mark Visited'}</button>
+              <button type="button" class="btn btn-secondary" data-action="details" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">Details</button>
+              <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng});">🗺️</button>
+              <button type="button" class="btn-icon btn-action btn-favorite ${favClass}" data-action="favorite" title="Favorite" aria-label="Favorite" onclick="event.stopPropagation(); window.toggleFavorite('${pubId}')">❤️</button>
+            </div>
+          </article>
+        `;
+      }
     }
   });
 

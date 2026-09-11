@@ -40,6 +40,7 @@ import {
   renderChatMessages,
   toggleSidebarChat
 } from './ui.js';
+import { initBottomSheet, initSidebarEventIsolation } from './sheet.js';
 
 async function startApp() {
   const {
@@ -53,12 +54,21 @@ async function startApp() {
   
   state.currentUser = session.user;
 
-  if (state.isSidebarHidden) {
+  if (state.isSidebarHidden && window.innerWidth > 768) {
     document.querySelector(".content-area").classList.add("sidebar-hidden");
   }
 
   setupUserProfile();
   initMap();
+
+  const sheetEl = document.querySelector('.sidebar');
+  const handleEl = document.querySelector('.sheet-handle-zone');
+  if (sheetEl) {
+    initSidebarEventIsolation(sheetEl);
+    if (handleEl) {
+      initBottomSheet(sheetEl, handleEl);
+    }
+  }
 }
 
 function toggleUserMenu() {

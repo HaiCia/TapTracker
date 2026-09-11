@@ -17,7 +17,7 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=isolated" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -130,6 +130,7 @@
         </div>
 
         <div class="info-panel sidebar">
+          <div class="sheet-handle-zone"><span class="sheet-handle-bar"></span></div>
           <div class="filters-container">
             <div class="segmented-control-bg">
               <button class="filter-btn active" onclick="setFilter('all', this)">
@@ -159,7 +160,7 @@
           </div>
 
           <div id="pub-info"></div>
-          <div id="pub-list-container"></div>
+          <div id="pub-list-container" class="sheet-content-list"></div>
         </div>
       </div>
     </div>
@@ -168,6 +169,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=isolated"></script>
   </body>
 </html>

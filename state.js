@@ -7,7 +7,7 @@ export const state = {
   currentUser: null,
   currentFilterType: 'all',
   currentSearchQuery: '',
-  isSidebarHidden: window.innerWidth <= 768,
+  isSidebarHidden: false,
   isListOnly: false,
   friendVisitData: {},
   isComparing: false,
