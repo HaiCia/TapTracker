@@ -344,13 +344,19 @@ export function stopComparing() {
 export function toggleSidebar() {
   if (window.innerWidth >= 1025) return;
   const contentArea = document.querySelector(".content-area");
+  const sidebar = document.querySelector(".sidebar");
+  const sidebarBtn = document.getElementById("sidebar-toggle-btn");
   if (state.isListOnly) toggleViewMode();
 
   state.isSidebarHidden = !state.isSidebarHidden;
   if (state.isSidebarHidden) {
     contentArea.classList.add("sidebar-hidden");
+    if (sidebar) sidebar.classList.add("is-collapsed");
+    if (sidebarBtn) sidebarBtn.innerText = "◀";
   } else {
     contentArea.classList.remove("sidebar-hidden");
+    if (sidebar) sidebar.classList.remove("is-collapsed");
+    if (sidebarBtn) sidebarBtn.innerText = "▶";
     setTimeout(() => { if (state.map) state.map.invalidateSize(); }, 100);
   }
   updateSidebarList();
@@ -358,12 +364,14 @@ export function toggleSidebar() {
 
 export function toggleViewMode() {
   const contentArea = document.querySelector(".content-area");
+  const sidebar = document.querySelector(".sidebar");
   const btn = document.getElementById("view-toggle-btn");
   const sidebarBtn = document.getElementById("sidebar-toggle-btn");
 
   if (state.isSidebarHidden) {
     state.isSidebarHidden = false;
     contentArea.classList.remove("sidebar-hidden");
+    if (sidebar) sidebar.classList.remove("is-collapsed");
   }
 
   state.isListOnly = !state.isListOnly;
@@ -375,7 +383,8 @@ export function toggleViewMode() {
     contentArea.classList.remove("list-only-mode");
     if (btn) btn.innerText = "All Pubs";
     if (sidebarBtn) {
-      sidebarBtn.style.display = (window.innerWidth >= 1025) ? "none" : "flex";
+      sidebarBtn.style.display = (window.innerWidth >= 769 && window.innerWidth <= 1024) ? "flex" : "none";
+      sidebarBtn.innerText = state.isSidebarHidden ? "◀" : "▶";
     }
     setTimeout(() => { if (state.map) state.map.invalidateSize(); }, 100);
   }

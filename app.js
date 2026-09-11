@@ -59,8 +59,10 @@ async function startApp() {
   if (window.innerWidth >= 1025) {
     state.isSidebarHidden = false;
     document.querySelector(".content-area")?.classList.remove("sidebar-hidden");
+    document.querySelector(".sidebar")?.classList.remove("is-collapsed");
   } else if (state.isSidebarHidden && window.innerWidth > 768) {
     document.querySelector(".content-area")?.classList.add("sidebar-hidden");
+    document.querySelector(".sidebar")?.classList.add("is-collapsed");
   }
 
   setupUserProfile();
@@ -141,19 +143,25 @@ document.addEventListener('click', function(event) {
 });
 
 window.addEventListener('resize', () => {
+  const sidebarBtn = document.getElementById("sidebar-toggle-btn");
   if (window.innerWidth >= 1025) {
     if (state.isSidebarHidden) {
       state.isSidebarHidden = false;
       document.querySelector(".content-area")?.classList.remove("sidebar-hidden");
+      document.querySelector(".sidebar")?.classList.remove("is-collapsed");
     }
-    const sidebarBtn = document.getElementById("sidebar-toggle-btn");
-    if (sidebarBtn && !state.isListOnly) {
+    if (sidebarBtn) {
       sidebarBtn.style.display = "none";
     }
-  } else if (window.innerWidth > 768 && window.innerWidth < 1025) {
-    const sidebarBtn = document.getElementById("sidebar-toggle-btn");
+  } else if (window.innerWidth >= 769 && window.innerWidth <= 1024) {
     if (sidebarBtn && !state.isListOnly) {
       sidebarBtn.style.display = "flex";
+      sidebarBtn.innerText = state.isSidebarHidden ? "◀" : "▶";
+    }
+  } else {
+    // Mobile <= 768px
+    if (sidebarBtn) {
+      sidebarBtn.style.display = "none";
     }
   }
   if (state.map) {
