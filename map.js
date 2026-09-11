@@ -17,22 +17,19 @@ export function initMap() {
   const LocateControl = L.Control.extend({
     options: { position: "topleft" },
     onAdd: function (map) {
-      const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
-      const button = L.DomUtil.create("a", "", container);
+      const container = L.DomUtil.create("div", "leaflet-control-locate leaflet-bar leaflet-control");
+      const button = L.DomUtil.create("a", "leaflet-control-locate-btn", container);
 
-      button.innerHTML = "📍";
+      button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"></circle><line x1="12" y1="1" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="23"></line><line x1="1" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="23" y2="12"></line><circle cx="12" cy="12" r="2"></circle></svg>`;
       button.href = "#";
       button.title = "Find my location";
-      button.style.fontSize = "18px";
-      button.style.lineHeight = "30px";
-      button.style.textAlign = "center";
-      button.style.textDecoration = "none";
-      button.style.backgroundColor = "white";
-      button.style.display = "block";
-      button.style.width = "34px";
-      button.style.height = "34px";
+      button.setAttribute("role", "button");
+      button.setAttribute("aria-label", "Find my location");
 
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
       L.DomEvent.disableClickPropagation(button);
+      L.DomEvent.disableScrollPropagation(button);
 
       L.DomEvent.on(button, "click", function (e) {
         L.DomEvent.preventDefault(e);

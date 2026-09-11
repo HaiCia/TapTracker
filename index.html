@@ -17,7 +17,7 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="style.css?v=legend" />
+    <link rel="stylesheet" href="style.css?v=unified-controls" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -129,7 +129,11 @@
               title="Toggle Map Legend"
               onclick="window.toggleLegend(event)"
             >
-              ℹ️
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
             </button>
             <div class="legend-card map-legend">
               <div><span class="legend-pin" style="background:#34495e"><i class="fa-solid fa-beer-mug-empty"></i></span> To Visit</div>
@@ -181,6 +185,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="app.js?v=legend"></script>
+    <script type="module" src="app.js?v=unified-controls"></script>
   </body>
 </html>
