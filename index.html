@@ -17,11 +17,19 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="style.css?v=tablet-toggle-v1" />
+    <link rel="stylesheet" href="style.css?v=pwa-install-v1" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0b1329" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="TapTracker" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
   </head>
   <body>
     <div class="app-container">
@@ -29,6 +37,22 @@
         <div class="header-logo">TAPTRACKER</div>
 
         <div class="header-actions">
+          <button
+            id="header-pwa-install-btn"
+            onclick="handlePwaInstall()"
+            class="filter-btn pwa-install-btn header-install-btn"
+            style="display: none"
+            title="Zainstaluj aplikację"
+            type="button"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Zainstaluj</span>
+          </button>
+
           <button
             id="view-toggle-btn"
             onclick="toggleViewMode()"
@@ -107,6 +131,20 @@
                 class="filter-btn dropdown-item"
               >
                 🔑 Password
+              </button>
+              <button
+                id="pwa-install-btn"
+                class="filter-btn dropdown-item pwa-install-btn"
+                style="display: none"
+                onclick="handlePwaInstall()"
+                type="button"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: -2px;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Zainstaluj aplikację
               </button>
               <button
                 onclick="window.toggleDarkMode()"

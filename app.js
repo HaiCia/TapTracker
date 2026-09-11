@@ -43,6 +43,10 @@ import {
   toggleLegend
 } from './ui.js';
 import { initBottomSheet, initSidebarEventIsolation } from './sheet.js';
+import { initPwa, handlePwaInstall, closeIosInstallModal } from './pwa.js';
+
+// Initialize PWA Controller immediately to capture early beforeinstallprompt
+initPwa();
 
 async function startApp() {
   const {
@@ -107,6 +111,8 @@ window.toggleViewMode = toggleViewMode;
 window.toggleLegend = toggleLegend;
 window.setFilter = setFilter;
 window.handleSearch = handleSearch;
+window.handlePwaInstall = handlePwaInstall;
+window.closeIosInstallModal = closeIosInstallModal;
 
 window.flyToPub = flyToPub;
 window.selectPub = selectPub;
