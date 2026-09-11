@@ -1,6 +1,8 @@
 export const state = {
   map: null,
   markers: [],
+  markerRegistry: new Map(),
+  selectedPubId: null,
   checkins: {},
   pubMessages: {},
   markerCluster: null,

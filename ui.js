@@ -1,6 +1,6 @@
 import { supabaseClient } from './api.js';
 import { state } from './state.js';
-import { applyFilters } from './map.js';
+import { applyFilters, selectPub } from './map.js';
 
 // --- Toast Notification System ---
 export function showToast(message, type = 'info', durationMs = 2200) {
@@ -77,12 +77,7 @@ export function getStarsHtml(pubId, currentRating) {
 }
 
 export function highlightSidebar(pubId) {
-  document.querySelectorAll(".pub-full-row, .pub-sidebar-card, .pub-card, .pub-list-item").forEach((el) => el.classList.remove("active-sidebar-item"));
-  const activeItem = document.getElementById(`sidebar-item-${pubId}`);
-  if (activeItem) {
-    activeItem.classList.add("active-sidebar-item");
-    activeItem.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
+  selectPub(pubId, "map", state.map);
 }
 
 export function updateSidebarList() {
@@ -98,6 +93,8 @@ export function updateSidebarList() {
       visibleCount++;
       const pubId = marker.pubData.id;
       const isVisited = marker.pubData.visited;
+      const isSelected = state.selectedPubId && String(state.selectedPubId) === String(pubId);
+      const selectedClass = isSelected ? "is-selected active-sidebar-item" : "";
 
       // Miniatura i fallback
       let imgUrl = marker.pubData.image_url ? escapeHTML(marker.pubData.image_url) : '';
@@ -125,7 +122,7 @@ export function updateSidebarList() {
       if (state.isListOnly) {
         // List B: Full List View - wide horizontal table/row layout
         listHtml += `
-          <article id="sidebar-item-${pubId}" class="pub-full-row" data-pub-id="${pubId}" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
+          <article id="sidebar-item-${pubId}" class="pub-full-row pub-card ${selectedClass}" data-pub-id="${pubId}" onclick="window.selectPub('${pubId}', 'list');">
             <div class="pub-full-main">
               <div class="pub-full-thumb-box">
                 <img 
@@ -163,7 +160,7 @@ export function updateSidebarList() {
             <div class="pub-full-actions">
               <button type="button" class="btn ${isVisited ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-status" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">${isVisited ? 'Add Again' : 'Mark Visited'}</button>
               <button type="button" class="btn btn-secondary" data-action="details" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">Details</button>
-              <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}), 100);">🗺️</button>
+              <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.selectPub('${pubId}', 'list'), 100);">🗺️</button>
               <button type="button" class="btn-icon btn-action btn-favorite ${favClass}" data-action="favorite" title="Favorite" aria-label="Favorite" onclick="event.stopPropagation(); window.toggleFavorite('${pubId}')">❤️</button>
             </div>
           </article>
@@ -171,7 +168,7 @@ export function updateSidebarList() {
       } else {
         // List A: Map Sidebar / Mobile Bottom Sheet - compact 2-row card
         listHtml += `
-          <article id="sidebar-item-${pubId}" class="pub-sidebar-card" data-pub-id="${pubId}" onclick="window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng}); window.highlightSidebar('${pubId}');">
+          <article id="sidebar-item-${pubId}" class="pub-sidebar-card pub-card ${selectedClass}" data-pub-id="${pubId}" onclick="window.selectPub('${pubId}', 'list');">
             <div class="pub-sidebar-card-top">
               <div class="pub-sidebar-thumb-box">
                 <img 
@@ -209,7 +206,7 @@ export function updateSidebarList() {
             <div class="pub-sidebar-actions">
               <button type="button" class="btn ${isVisited ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-status" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">${isVisited ? 'Add Again' : 'Mark Visited'}</button>
               <button type="button" class="btn btn-secondary" data-action="details" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">Details</button>
-              <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.flyToPub(${marker.pubData.lat}, ${marker.pubData.lng});">🗺️</button>
+              <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.selectPub('${pubId}', 'list');">🗺️</button>
               <button type="button" class="btn-icon btn-action btn-favorite ${favClass}" data-action="favorite" title="Favorite" aria-label="Favorite" onclick="event.stopPropagation(); window.toggleFavorite('${pubId}')">❤️</button>
             </div>
           </article>
@@ -257,6 +254,14 @@ export function updateSidebarList() {
       sidebarBtn.innerHTML = `${arrow} LIST (${visibleCount}) ${arrow}`;
     } else {
       sidebarBtn.innerText = state.isSidebarHidden ? "◀" : "▶";
+    }
+  }
+
+  if (state.selectedPubId) {
+    const activeMarker = state.markerRegistry?.get(String(state.selectedPubId));
+    if (activeMarker) {
+      const el = activeMarker.getElement();
+      if (el) el.classList.add("marker-active");
     }
   }
 }

@@ -176,6 +176,12 @@ export async function loadPubs() {
   }
 
   state.markers = [];
+  if (!state.markerRegistry) {
+    state.markerRegistry = new Map();
+  } else {
+    state.markerRegistry.clear();
+  }
+
   if (pubs) {
     pubs.forEach((pub) => {
       const isVisited = !!visitedMap[pub.id];
@@ -199,6 +205,8 @@ export async function loadPubs() {
       marker.pubData = pub;
 
       state.markers.push(marker);
+      state.markerRegistry.set(String(pub.id), marker);
+      state.markerRegistry.set(Number(pub.id), marker);
     });
   }
   applyFilters();
@@ -207,10 +215,17 @@ export async function loadPubs() {
 export function applyFilters() {
   state.markerCluster.clearLayers();
 
+  if (!state.markerRegistry) {
+    state.markerRegistry = new Map();
+  }
+
   state.markers.forEach((marker) => {
     const isVisited = marker.pubData.visited;
     const isFavorite = marker.pubData.is_favorite;
     const pubId = marker.pubData.id;
+    state.markerRegistry.set(String(pubId), marker);
+    state.markerRegistry.set(Number(pubId), marker);
+
     const isFriendVisited = state.isComparing &&
       (state.friendVisitData[pubId] || state.friendVisitData[String(pubId)] || state.friendVisitData[Number(pubId)]);
 
@@ -246,18 +261,79 @@ export function applyFilters() {
     marker.unbindPopup();
     marker.off("click");
 
-    marker.on("click", () => {
-      highlightSidebar(pubId);
-      openPubDetails(pubId);
+    marker.on("click", (e) => {
+      if (e && e.originalEvent) {
+        L.DomEvent.stopPropagation(e);
+      }
+      selectPub(pubId, "map", state.map);
     });
 
     if (marker.matchesFilters) {
       state.markerCluster.addLayer(marker);
+      if (state.selectedPubId && String(state.selectedPubId) === String(pubId)) {
+        setTimeout(() => {
+          const el = marker.getElement();
+          if (el) el.classList.add("marker-active");
+        }, 0);
+      }
     }
   });
 
   updateSidebarList();
 }
+
+export function selectPub(pubId, source = "code", map = state.map) {
+  if (!pubId) return;
+  const idStr = String(pubId);
+  state.selectedPubId = idStr;
+
+  // 1. Update Marker Highlight
+  document.querySelectorAll(".leaflet-marker-icon.marker-active, .marker-active").forEach((el) => {
+    el.classList.remove("marker-active");
+  });
+
+  const marker = (state.markerRegistry && state.markerRegistry.get(idStr)) ||
+    state.markers.find((m) => String(m.pubData?.id) === idStr);
+
+  if (marker) {
+    const applyMarkerActive = () => {
+      const el = marker.getElement();
+      if (el) {
+        el.classList.add("marker-active");
+      }
+    };
+
+    if (source === "list") {
+      const targetMap = map || state.map;
+      if (targetMap && marker.pubData?.lat != null && marker.pubData?.lng != null) {
+        targetMap.panTo([marker.pubData.lat, marker.pubData.lng], { animate: true, duration: 0.4 });
+      }
+    }
+
+    if (state.markerCluster && typeof state.markerCluster.zoomToShowLayer === "function") {
+      state.markerCluster.zoomToShowLayer(marker, () => {
+        applyMarkerActive();
+      });
+    } else {
+      applyMarkerActive();
+    }
+  }
+
+  // 2. Update List Item Highlight
+  document.querySelectorAll(".pub-card, .pub-sidebar-card, .pub-full-row, .pub-list-item").forEach((el) => {
+    el.classList.remove("is-selected", "active-sidebar-item");
+  });
+
+  const cardEl = document.querySelector(`.pub-card[data-pub-id="${idStr}"], [data-pub-id="${idStr}"]`);
+  if (cardEl) {
+    cardEl.classList.add("is-selected", "active-sidebar-item");
+    if (source === "map") {
+      cardEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+}
+
+window.selectPub = selectPub;
 
 export function flyToPub(lat, lng) {
   state.map.setView([lat, lng], 16);

@@ -11,7 +11,7 @@ import {
   grantAdminStatus,
   revokeAdminStatus
 } from './auth.js';
-import { initMap, loadPubs, applyFilters, flyToPub } from './map.js';
+import { initMap, loadPubs, applyFilters, flyToPub, selectPub } from './map.js';
 import {
   showToast,
   getMarkerHtml,
@@ -98,6 +98,7 @@ window.setFilter = setFilter;
 window.handleSearch = handleSearch;
 
 window.flyToPub = flyToPub;
+window.selectPub = selectPub;
 window.highlightSidebar = highlightSidebar;
 window.toggleVisitState = toggleVisitState;
 window.saveRating = saveRating;

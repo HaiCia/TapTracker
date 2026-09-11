@@ -751,6 +751,36 @@ body.dark-mode .filter-btn:hover {
   background: #f39c12;
 }
 
+/* --- Active Marker Highlight and Pulse Animation --- */
+.leaflet-marker-icon.marker-active {
+  z-index: 10000 !important;
+  animation: markerGlowPulse 1.6s infinite ease-in-out;
+}
+
+.leaflet-marker-icon.marker-active .pub-icon-container {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px #ffffff, 0 0 14px 4px #0284c7, -2px 2px 8px rgba(0, 0, 0, 0.5) !important;
+  animation: markerScalePulse 1.6s infinite ease-in-out;
+}
+
+@keyframes markerGlowPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(2, 132, 199, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 1)) drop-shadow(0 0 20px rgba(2, 132, 199, 0.8));
+  }
+}
+
+@keyframes markerScalePulse {
+  0%, 100% {
+    transform: rotate(-45deg) scale(1.08);
+  }
+  50% {
+    transform: rotate(-45deg) scale(1.24);
+  }
+}
+
 /* Klastry na mapie */
 .marker-cluster {
   background: transparent !important;
@@ -1270,10 +1300,33 @@ body.dark-mode .btn-icon:hover,
   border-color: var(--border-color);
 }
 
-.pub-sidebar-card.active-sidebar-item {
-  border-color: var(--pub-primary);
-  background-color: var(--pub-bg-hover);
-  box-shadow: 0 0 0 1px var(--pub-primary);
+.pub-card.is-selected,
+.pub-sidebar-card.is-selected,
+.pub-full-row.is-selected,
+.pub-card.active-sidebar-item,
+.pub-sidebar-card.active-sidebar-item,
+.pub-full-row.active-sidebar-item {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.35), 0 4px 16px rgba(2, 132, 199, 0.2) !important;
+  background-color: rgba(2, 132, 199, 0.08) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+body.dark-mode .pub-card.is-selected,
+body.dark-mode .pub-sidebar-card.is-selected,
+body.dark-mode .pub-full-row.is-selected,
+body.dark-mode .pub-card.active-sidebar-item,
+body.dark-mode .pub-sidebar-card.active-sidebar-item,
+body.dark-mode .pub-full-row.active-sidebar-item,
+[data-theme="dark"] .pub-card.is-selected,
+[data-theme="dark"] .pub-sidebar-card.is-selected,
+[data-theme="dark"] .pub-full-row.is-selected,
+[data-theme="dark"] .pub-card.active-sidebar-item,
+[data-theme="dark"] .pub-sidebar-card.active-sidebar-item,
+[data-theme="dark"] .pub-full-row.active-sidebar-item {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.45), 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+  background-color: rgba(2, 132, 199, 0.16) !important;
 }
 
 .pub-sidebar-card-top {
@@ -1420,11 +1473,6 @@ body.dark-mode .btn-icon:hover,
   border-color: var(--border-color);
 }
 
-.pub-full-row.active-sidebar-item {
-  border-color: var(--pub-primary);
-  background-color: var(--pub-bg-hover);
-  box-shadow: 0 0 0 1px var(--pub-primary);
-}
 
 .pub-full-main {
   display: flex;
