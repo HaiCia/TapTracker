@@ -20,8 +20,9 @@ describe('Manual Password Reset Recovery Notice', () => {
     const notice = document.querySelector('.auth-recovery-notice');
     const mailtoLink = notice.querySelector('a[href^="mailto:"]');
     expect(mailtoLink).not.toBeNull();
-    expect(mailtoLink.getAttribute('href')).toMatch(/^mailto:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/);
+    expect(mailtoLink.getAttribute('href')).toBe('mailto:taptracker@outlook.com');
     expect(notice.textContent).toContain('Forgot your password? Send an email to');
+    expect(notice.textContent).toContain('taptracker@outlook.com');
     expect(notice.textContent).toContain('and we will reset it for you.');
   });
 

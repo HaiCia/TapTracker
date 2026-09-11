@@ -4,7 +4,7 @@ export const SUPABASE_ANON_KEY =
   "sb_publishable_8vskfM3NxMq5lXHJmAlc0w_32jUvvD8";
 // Cloudflare Turnstile Site Key (defaults to Cloudflare always-passes testing key if not configured)
 export const TURNSTILE_SITE_KEY = "0x4AAAAAAEwQfi-EGp4YS8k7";
-export const SUPPORT_EMAIL = "support@taptracker.app";
+export const SUPPORT_EMAIL = "taptracker@outlook.com";
 
 if (typeof window !== "undefined") {
   window.SUPABASE_URL = SUPABASE_URL;
