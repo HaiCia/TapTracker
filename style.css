@@ -20,9 +20,22 @@
   --border-color: #8e8e8e;
   --border-light: #eee;
   --header-shadow: rgba(0, 0, 0, 0.04);
+  /* Default light theme surface/button tokens */
+  --bg-surface: #ffffff;
+  --bg-card: #f8fafc;
+  --border-subtle: #e2e8f0;
+  --btn-sec-bg: #f1f5f9;
+  --btn-sec-hover: #e2e8f0;
+  --btn-sec-text: #0f172a;
+  --btn-sec-border: #cbd5e1;
+  --icon-btn-bg: #f1f5f9;
+  --icon-btn-text: #475569;
+  --icon-btn-border: #cbd5e1;
+  --thumb-box-bg: #f1f5f9;
 }
 
-body.dark-mode {
+body.dark-mode,
+[data-theme="dark"] {
   --bg-app: #121212;
   --bg-primary: #0f172a;
   --bg-hover: #2a2a2a;
@@ -35,13 +48,30 @@ body.dark-mode {
   --bg-surface: #0b1329;
   --bg-card: #0f172a;
   --border-subtle: #1e293b;
+  --btn-sec-bg: transparent;
+  --btn-sec-hover: #1e293b;
+  --btn-sec-text: #94a3b8;
+  --btn-sec-border: #1e293b;
+  --icon-btn-bg: transparent;
+  --icon-btn-text: #94a3b8;
+  --icon-btn-border: transparent;
+  --thumb-box-bg: #1e293b;
 }
 
 /* Light Mode Theme Tokens */
+[data-theme="light"],
 body:not(.dark-mode) {
   --bg-surface: #ffffff;
   --bg-card: #f8fafc;
   --border-subtle: #e2e8f0;
+  --btn-sec-bg: #f1f5f9;
+  --btn-sec-hover: #e2e8f0;
+  --btn-sec-text: #0f172a;
+  --btn-sec-border: #cbd5e1;
+  --icon-btn-bg: #f1f5f9;
+  --icon-btn-text: #475569;
+  --icon-btn-border: #cbd5e1;
+  --thumb-box-bg: #f1f5f9;
 }
 
 /* =========================================
@@ -1127,20 +1157,38 @@ body.dark-mode .filter-btn:hover {
   background-color: var(--pub-primary-hover);
 }
 
-.btn-secondary {
-  background-color: transparent;
-  border-color: var(--pub-border);
-  color: var(--pub-subtext);
+.btn-secondary,
+.pub-card .btn-secondary,
+.pub-actions .btn-secondary,
+.pub-sidebar-actions .btn-secondary,
+.pub-full-actions .btn-secondary {
+  background-color: var(--btn-sec-bg);
+  border: 1px solid var(--btn-sec-border);
+  color: var(--btn-sec-text);
 }
 
-.btn-secondary:hover {
-  background-color: #1e293b;
+.btn-secondary:hover,
+.pub-card .btn-secondary:hover,
+.pub-actions .btn-secondary:hover,
+.pub-sidebar-actions .btn-secondary:hover,
+.pub-full-actions .btn-secondary:hover {
+  background-color: var(--btn-sec-hover);
+  color: var(--btn-sec-text);
+  border-color: var(--btn-sec-border);
+}
+
+body.dark-mode .btn-secondary:hover,
+[data-theme="dark"] .btn-secondary:hover {
   color: var(--pub-text);
 }
 
-.btn-icon {
-  background: transparent;
-  border: 1px solid transparent;
+.btn-icon,
+.pub-card .btn-icon,
+.pub-actions .btn-icon,
+.pub-sidebar-actions .btn-icon,
+.pub-full-actions .btn-icon {
+  background-color: var(--icon-btn-bg);
+  border: 1px solid var(--icon-btn-border);
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
@@ -1148,12 +1196,23 @@ body.dark-mode .filter-btn:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--pub-subtext);
+  color: var(--icon-btn-text);
   box-sizing: border-box;
+  transition: all 0.15s ease;
 }
 
-.btn-icon:hover {
-  background-color: #1e293b;
+.btn-icon:hover,
+.pub-card .btn-icon:hover,
+.pub-actions .btn-icon:hover,
+.pub-sidebar-actions .btn-icon:hover,
+.pub-full-actions .btn-icon:hover {
+  background-color: var(--btn-sec-hover);
+  color: var(--btn-sec-text);
+  border-color: var(--btn-sec-border);
+}
+
+body.dark-mode .btn-icon:hover,
+[data-theme="dark"] .btn-icon:hover {
   color: var(--pub-text);
 }
 
@@ -1208,7 +1267,7 @@ body.dark-mode .filter-btn:hover {
 
 .pub-sidebar-card:hover {
   background-color: var(--pub-bg-hover);
-  border-color: #334155;
+  border-color: var(--border-color);
 }
 
 .pub-sidebar-card.active-sidebar-item {
@@ -1230,7 +1289,8 @@ body.dark-mode .filter-btn:hover {
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
-  background-color: #1e293b;
+  background-color: var(--thumb-box-bg, #1e293b);
+  border: 1px solid var(--border-subtle);
   position: relative;
   display: flex;
   align-items: center;
@@ -1307,7 +1367,7 @@ body.dark-mode .filter-btn:hover {
   gap: 6px;
   width: 100%;
   padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .pub-sidebar-actions .btn {
@@ -1357,7 +1417,7 @@ body.dark-mode .filter-btn:hover {
 
 .pub-full-row:hover {
   background-color: var(--pub-bg-hover);
-  border-color: #334155;
+  border-color: var(--border-color);
 }
 
 .pub-full-row.active-sidebar-item {
@@ -1381,7 +1441,8 @@ body.dark-mode .filter-btn:hover {
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
-  background-color: #1e293b;
+  background-color: var(--thumb-box-bg, #1e293b);
+  border: 1px solid var(--border-subtle);
   position: relative;
   display: flex;
   align-items: center;

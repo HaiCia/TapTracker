@@ -113,6 +113,9 @@ window.removeSingleVisit = removeSingleVisit;
 window.toggleDarkMode = function() {
   document.body.classList.toggle("dark-mode");
   const isDark = document.body.classList.contains("dark-mode");
+  const theme = isDark ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", theme);
+  document.body.setAttribute("data-theme", theme);
   localStorage.setItem("taptracker_darkmode", isDark);
 };
 
@@ -127,8 +130,15 @@ document.addEventListener('click', function(event) {
 });
 
 // Load dark mode preference on startup
-if (localStorage.getItem("taptracker_darkmode") === "true") {
+const isDarkModeStored = localStorage.getItem("taptracker_darkmode") === "true";
+if (isDarkModeStored) {
   document.body.classList.add("dark-mode");
+  document.documentElement.setAttribute("data-theme", "dark");
+  document.body.setAttribute("data-theme", "dark");
+} else {
+  document.body.classList.remove("dark-mode");
+  document.documentElement.setAttribute("data-theme", "light");
+  document.body.setAttribute("data-theme", "light");
 }
 window.editNote = function(pubId) {
     alert("Edit note function is not implemented yet. Use 'note' in pub details.");
