@@ -56,12 +56,21 @@ async function startApp() {
   
   state.currentUser = session.user;
 
-  if (state.isSidebarHidden && window.innerWidth > 768) {
-    document.querySelector(".content-area").classList.add("sidebar-hidden");
+  if (window.innerWidth >= 1025) {
+    state.isSidebarHidden = false;
+    document.querySelector(".content-area")?.classList.remove("sidebar-hidden");
+  } else if (state.isSidebarHidden && window.innerWidth > 768) {
+    document.querySelector(".content-area")?.classList.add("sidebar-hidden");
   }
 
   setupUserProfile();
   initMap();
+
+  if (window.innerWidth >= 1025) {
+    setTimeout(() => {
+      if (state.map) state.map.invalidateSize();
+    }, 150);
+  }
 
   const sheetEl = document.querySelector('.sidebar');
   const handleEl = document.querySelector('.sheet-handle-zone');
@@ -128,6 +137,27 @@ document.addEventListener('click', function(event) {
     if (!dropdown.contains(event.target) && event.target !== btn) {
       dropdown.classList.remove("show");
     }
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth >= 1025) {
+    if (state.isSidebarHidden) {
+      state.isSidebarHidden = false;
+      document.querySelector(".content-area")?.classList.remove("sidebar-hidden");
+    }
+    const sidebarBtn = document.getElementById("sidebar-toggle-btn");
+    if (sidebarBtn && !state.isListOnly) {
+      sidebarBtn.style.display = "none";
+    }
+  } else if (window.innerWidth > 768 && window.innerWidth < 1025) {
+    const sidebarBtn = document.getElementById("sidebar-toggle-btn");
+    if (sidebarBtn && !state.isListOnly) {
+      sidebarBtn.style.display = "flex";
+    }
+  }
+  if (state.map) {
+    state.map.invalidateSize();
   }
 });
 

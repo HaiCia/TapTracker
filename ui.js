@@ -157,7 +157,7 @@ export function updateSidebarList() {
               </div>
             </div>
 
-            <div class="pub-full-actions">
+            <div class="pub-full-actions pub-actions">
               <button type="button" class="btn ${isVisited ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-status" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">${isVisited ? 'Add Again' : 'Mark Visited'}</button>
               <button type="button" class="btn btn-secondary" data-action="details" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">Details</button>
               <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.toggleViewMode(); setTimeout(() => window.selectPub('${pubId}', 'list'), 100);">🗺️</button>
@@ -203,7 +203,7 @@ export function updateSidebarList() {
               </div>
             </div>
 
-            <div class="pub-sidebar-actions">
+            <div class="pub-sidebar-actions pub-actions">
               <button type="button" class="btn ${isVisited ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-status" onclick="event.stopPropagation(); window.handleAddVisit('${pubId}')">${isVisited ? 'Add Again' : 'Mark Visited'}</button>
               <button type="button" class="btn btn-secondary" data-action="details" onclick="event.stopPropagation(); window.openPubDetails('${pubId}')">Details</button>
               <button type="button" class="btn-icon btn-action" data-action="map" title="Show on map" aria-label="Show on map" onclick="event.stopPropagation(); window.selectPub('${pubId}', 'list');">🗺️</button>
@@ -342,6 +342,7 @@ export function stopComparing() {
 }
 
 export function toggleSidebar() {
+  if (window.innerWidth >= 1025) return;
   const contentArea = document.querySelector(".content-area");
   if (state.isListOnly) toggleViewMode();
 
@@ -368,12 +369,14 @@ export function toggleViewMode() {
   state.isListOnly = !state.isListOnly;
   if (state.isListOnly) {
     contentArea.classList.add("list-only-mode");
-    btn.innerText = "🗺️ Map";
-    sidebarBtn.style.display = "none";
+    if (btn) btn.innerText = "🗺️ Map";
+    if (sidebarBtn) sidebarBtn.style.display = "none";
   } else {
     contentArea.classList.remove("list-only-mode");
-    btn.innerText = "Full List";
-    sidebarBtn.style.display = "flex";
+    if (btn) btn.innerText = "All Pubs";
+    if (sidebarBtn) {
+      sidebarBtn.style.display = (window.innerWidth >= 1025) ? "none" : "flex";
+    }
     setTimeout(() => { if (state.map) state.map.invalidateSize(); }, 100);
   }
   updateSidebarList();
