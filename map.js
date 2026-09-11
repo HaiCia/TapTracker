@@ -4,7 +4,7 @@ import { getMarkerHtml, updateSidebarList, openPubDetails, highlightSidebar, esc
 
 // Helper function to offset map center vertically on mobile to clear bottom sheet
 export function applyMobileVerticalOffset(map = state.map, animate = false) {
-  if (!map || typeof window === 'undefined' || window.innerWidth >= 768) return;
+  if (!map || typeof window === 'undefined' || window.innerWidth > 768) return;
   const size = map.getSize();
   const offsetY = (size && size.y > 0) ? Math.round(size.y * 0.25) : Math.round(window.innerHeight * 0.25);
   if (offsetY > 0) {
@@ -12,6 +12,27 @@ export function applyMobileVerticalOffset(map = state.map, animate = false) {
   }
 }
 window.applyMobileVerticalOffset = applyMobileVerticalOffset;
+
+export function panToWithVerticalOffset(map = state.map, latLng, options = {}) {
+  if (!map || !latLng) return;
+  const targetLatLng = L.latLng(latLng);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const duration = options.duration != null ? options.duration : 0.5;
+
+  if (isMobile) {
+    const targetRatioY = options.targetRatioY != null ? options.targetRatioY : 0.25;
+    const zoom = map.getZoom();
+    const targetPoint = map.project(targetLatLng, zoom);
+    const size = map.getSize();
+    const offsetY = (0.5 - targetRatioY) * size.y;
+    const centerPoint = L.point(targetPoint.x, targetPoint.y + offsetY);
+    const centerLatLng = map.unproject(centerPoint, zoom);
+    map.panTo(centerLatLng, { animate: true, duration });
+  } else {
+    map.panTo(targetLatLng, { animate: true, duration });
+  }
+}
+window.panToWithVerticalOffset = panToWithVerticalOffset;
 
 export function initMap() {
   state.map = L.map("map").setView([53.8008, -1.5491], 13);
@@ -320,12 +341,7 @@ export function selectPub(pubId, source = "code", map = state.map) {
     if (source === "list") {
       const targetMap = map || state.map;
       if (targetMap && marker.pubData?.lat != null && marker.pubData?.lng != null) {
-        if (window.innerWidth < 768) {
-          targetMap.setView([marker.pubData.lat, marker.pubData.lng], 16);
-          applyMobileVerticalOffset(targetMap, false);
-        } else {
-          targetMap.panTo([marker.pubData.lat, marker.pubData.lng], { animate: true, duration: 0.4 });
-        }
+        panToWithVerticalOffset(targetMap, [marker.pubData.lat, marker.pubData.lng], { targetRatioY: 0.25, duration: 0.5 });
       }
     }
 
@@ -355,6 +371,5 @@ export function selectPub(pubId, source = "code", map = state.map) {
 window.selectPub = selectPub;
 
 export function flyToPub(lat, lng) {
-  state.map.setView([lat, lng], 16);
-  applyMobileVerticalOffset(state.map, false);
+  panToWithVerticalOffset(state.map, [lat, lng], { targetRatioY: 0.25, duration: 0.5 });
 }
