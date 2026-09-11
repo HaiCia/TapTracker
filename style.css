@@ -983,6 +983,7 @@ body.dark-mode .filter-btn:hover {
 
 .login-container {
   width: 320px;
+  max-width: calc(100vw - 24px);
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -1025,6 +1026,68 @@ body.dark-mode .filter-btn:hover {
   font-weight: bold;
   text-align: center;
   min-height: 14px;
+}
+
+/* --- MANUAL PASSWORD RESET RECOVERY NOTICE --- */
+.auth-recovery-notice {
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: var(--bg-card, #0f172a);
+  border: 1px solid var(--border-subtle, #1e293b);
+  border-radius: 6px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--btn-sec-text, #94a3b8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.auth-recovery-notice .recovery-prompt {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.auth-recovery-notice .recovery-email-link {
+  color: #38bdf8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+  transition: color 0.15s ease;
+  word-break: break-all;
+}
+
+.auth-recovery-notice .recovery-email-link:hover {
+  color: #7dd3fc;
+}
+
+.auth-recovery-notice .recovery-security-condition {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle, #1e293b);
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--btn-sec-text, #94a3b8);
+}
+
+@media (max-width: 360px) {
+  .login-container {
+    width: 100%;
+    max-width: calc(100vw - 20px);
+    padding: 16px 12px;
+    margin: 0 auto;
+  }
+
+  .auth-recovery-notice {
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .auth-recovery-notice .recovery-security-condition {
+    font-size: 10px;
+    line-height: 1.4;
+  }
 }
 /* --- GEOLOKALIZACJA - MINI DYMEK --- */
 .mini-location-popup .leaflet-popup-content-wrapper {
