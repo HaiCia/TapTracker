@@ -2,8 +2,21 @@ import { supabaseClient } from './api.js';
 import { state } from './state.js';
 import { getMarkerHtml, updateSidebarList, openPubDetails, highlightSidebar, escapeHTML } from './ui.js';
 
+// Helper function to offset map center vertically on mobile to clear bottom sheet
+export function applyMobileVerticalOffset(map = state.map, animate = false) {
+  if (!map || typeof window === 'undefined' || window.innerWidth >= 768) return;
+  const size = map.getSize();
+  const offsetY = (size && size.y > 0) ? Math.round(size.y * 0.25) : Math.round(window.innerHeight * 0.25);
+  if (offsetY > 0) {
+    map.panBy([0, offsetY], { animate });
+  }
+}
+window.applyMobileVerticalOffset = applyMobileVerticalOffset;
+
 export function initMap() {
   state.map = L.map("map").setView([53.8008, -1.5491], 13);
+  applyMobileVerticalOffset(state.map, false);
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
   }).addTo(state.map);
@@ -66,6 +79,7 @@ export function initMap() {
           },
         );
     }
+    applyMobileVerticalOffset(state.map, false);
     state.userLocationMarker.openPopup();
   });
 
@@ -306,7 +320,12 @@ export function selectPub(pubId, source = "code", map = state.map) {
     if (source === "list") {
       const targetMap = map || state.map;
       if (targetMap && marker.pubData?.lat != null && marker.pubData?.lng != null) {
-        targetMap.panTo([marker.pubData.lat, marker.pubData.lng], { animate: true, duration: 0.4 });
+        if (window.innerWidth < 768) {
+          targetMap.setView([marker.pubData.lat, marker.pubData.lng], 16);
+          applyMobileVerticalOffset(targetMap, false);
+        } else {
+          targetMap.panTo([marker.pubData.lat, marker.pubData.lng], { animate: true, duration: 0.4 });
+        }
       }
     }
 
@@ -337,4 +356,5 @@ window.selectPub = selectPub;
 
 export function flyToPub(lat, lng) {
   state.map.setView([lat, lng], 16);
+  applyMobileVerticalOffset(state.map, false);
 }
