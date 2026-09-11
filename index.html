@@ -25,6 +25,7 @@
     <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0b1329" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TapTracker" />
@@ -42,7 +43,7 @@
             onclick="handlePwaInstall()"
             class="filter-btn pwa-install-btn header-install-btn"
             style="display: none"
-            title="Zainstaluj aplikację"
+            title="Install App"
             type="button"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -50,7 +51,7 @@
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            <span>Zainstaluj</span>
+            <span>Install</span>
           </button>
 
           <button
@@ -144,7 +145,7 @@
                   <polyline points="7 10 12 15 17 10"></polyline>
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                Zainstaluj aplikację
+                Install App
               </button>
               <button
                 onclick="window.toggleDarkMode()"

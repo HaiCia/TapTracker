@@ -1,19 +1,20 @@
-﻿// pwa.js - Progressive Web App Install Controller & iOS Safari Fallback
+// pwa.js - Progressive Web App Install Controller & iOS Safari Fallback
 
 let deferredPrompt = null;
 
 export function isStandalone() {
   return (
-    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone === true ||
-    document.referrer.includes('android-app://')
+    document.referrer.includes("android-app://")
   );
 }
 
 export function isIOS() {
-  const userAgent = window.navigator.userAgent || '';
+  const userAgent = window.navigator.userAgent || "";
   const isAppleTouch = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-  const isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  const isIPadOS =
+    navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
   return isAppleTouch || isIPadOS;
 }
 
@@ -22,16 +23,18 @@ export function showInstallButtons() {
     hideInstallButtons();
     return;
   }
-  const buttons = document.querySelectorAll('.pwa-install-btn');
+  const buttons = document.querySelectorAll(".pwa-install-btn");
   buttons.forEach((btn) => {
-    btn.style.display = btn.classList.contains('header-install-btn') ? 'inline-flex' : 'flex';
+    btn.style.display = btn.classList.contains("header-install-btn")
+      ? "inline-flex"
+      : "flex";
   });
 }
 
 export function hideInstallButtons() {
-  const buttons = document.querySelectorAll('.pwa-install-btn');
+  const buttons = document.querySelectorAll(".pwa-install-btn");
   buttons.forEach((btn) => {
-    btn.style.display = 'none';
+    btn.style.display = "none";
   });
 }
 
@@ -42,9 +45,9 @@ export async function handlePwaInstall() {
   }
 
   // Close user dropdown if open
-  const dropdown = document.getElementById('user-dropdown');
-  if (dropdown && dropdown.classList.contains('show')) {
-    dropdown.classList.remove('show');
+  const dropdown = document.getElementById("user-dropdown");
+  if (dropdown && dropdown.classList.contains("show")) {
+    dropdown.classList.remove("show");
   }
 
   if (deferredPrompt) {
@@ -52,11 +55,11 @@ export async function handlePwaInstall() {
     try {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
+      if (outcome === "accepted") {
         hideInstallButtons();
       }
     } catch (err) {
-      console.warn('PWA install prompt error:', err);
+      console.warn("PWA install prompt error:", err);
     }
     deferredPrompt = null;
   } else if (isIOS()) {
@@ -69,39 +72,39 @@ export async function handlePwaInstall() {
 }
 
 export function showIosInstallModal() {
-  let modal = document.getElementById('pwa-install-modal');
+  let modal = document.getElementById("pwa-install-modal");
   if (!modal) {
     modal = createIosInstallModal();
     document.body.appendChild(modal);
   }
-  modal.style.display = 'flex';
+  modal.style.display = "flex";
   void modal.offsetWidth; // Force reflow
-  modal.classList.add('show');
+  modal.classList.add("show");
 
   // Handle escape key
   const handleKeydown = (e) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       closeIosInstallModal();
-      document.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener("keydown", handleKeydown);
     }
   };
-  document.addEventListener('keydown', handleKeydown);
+  document.addEventListener("keydown", handleKeydown);
 }
 
 export function closeIosInstallModal() {
-  const modal = document.getElementById('pwa-install-modal');
+  const modal = document.getElementById("pwa-install-modal");
   if (modal) {
-    modal.classList.remove('show');
+    modal.classList.remove("show");
     setTimeout(() => {
-      modal.style.display = 'none';
+      modal.style.display = "none";
     }, 250);
   }
 }
 
 function createIosInstallModal() {
-  const overlay = document.createElement('div');
-  overlay.id = 'pwa-install-modal';
-  overlay.className = 'ios-install-overlay';
+  const overlay = document.createElement("div");
+  overlay.id = "pwa-install-modal";
+  overlay.className = "ios-install-overlay";
   overlay.onclick = (e) => {
     if (e.target === overlay) closeIosInstallModal();
   };
@@ -110,12 +113,12 @@ function createIosInstallModal() {
     <div class="ios-install-card" role="dialog" aria-modal="true" aria-labelledby="pwa-modal-title">
       <div class="ios-install-header">
         <h3 id="pwa-modal-title" class="ios-install-title">
-          <span>🍺</span> Zainstaluj TapTracker
+          <span>🍺</span> Install TapTracker
         </h3>
-        <button type="button" class="ios-install-close" onclick="window.closeIosInstallModal()" aria-label="Zamknij">✕</button>
+        <button type="button" class="ios-install-close" onclick="window.closeIosInstallModal()" aria-label="Close">✕</button>
       </div>
       <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.4;">
-        Zainstaluj TapTracker na ekranie głównym swojego telefonu, aby cieszyć się pełnym ekranem i błyskawicznym dostępem do pubów.
+        Install TapTracker on your phone's home screen to enjoy a full screen experience and instant access to pubs.
       </p>
       <div class="ios-install-steps">
         <div class="ios-install-step">
@@ -127,7 +130,7 @@ function createIosInstallModal() {
             </svg>
           </div>
           <div class="ios-step-text">
-            1. W przeglądarce Safari stuknij ikonę <strong>Udostępnij</strong> na dolnym pasku narzędzi.
+            1. In Safari, tap the <strong>Share</strong> icon in the bottom toolbar.
           </div>
         </div>
         <div class="ios-install-step">
@@ -139,7 +142,7 @@ function createIosInstallModal() {
             </svg>
           </div>
           <div class="ios-step-text">
-            2. Przewiń listę opcji w dół i wybierz <strong>Do ekranu początkowego</strong>.
+            2. Scroll down the options and select <strong>Add to Home Screen</strong>.
           </div>
         </div>
         <div class="ios-install-step">
@@ -147,12 +150,12 @@ function createIosInstallModal() {
             <span style="font-size: 16px;">➕</span>
           </div>
           <div class="ios-step-text">
-            3. W prawym górnym rogu ekranu kliknij <strong>Dodaj</strong>.
+            3. Tap <strong>Add</strong> in the top-right corner.
           </div>
         </div>
       </div>
       <button type="button" class="ios-install-btn-action" onclick="window.closeIosInstallModal()">
-        Rozumiem
+        Got it
       </button>
     </div>
   `;
@@ -167,18 +170,18 @@ export function initPwa() {
   }
 
   // Listen for Chromium beforeinstallprompt
-  window.addEventListener('beforeinstallprompt', (e) => {
+  window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
     showInstallButtons();
   });
 
   // Listen for appinstalled
-  window.addEventListener('appinstalled', () => {
+  window.addEventListener("appinstalled", () => {
     deferredPrompt = null;
     hideInstallButtons();
     if (window.showToast) {
-      window.showToast('TapTracker został pomyślnie zainstalowany!', 'success');
+      window.showToast("TapTracker was successfully installed!", "success");
     }
   });
 
@@ -188,14 +191,18 @@ export function initPwa() {
   }
 
   // Register service worker if supported
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./sw.js")
         .then((reg) => {
-          console.log('PWA Service Worker registered:', reg.scope);
+          console.log("PWA Service Worker registered:", reg.scope);
         })
         .catch((err) => {
-          console.log('PWA Service Worker registration skipped or failed:', err);
+          console.log(
+            "PWA Service Worker registration skipped or failed:",
+            err,
+          );
         });
     });
   }
